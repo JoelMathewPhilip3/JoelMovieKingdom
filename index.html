@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joel's Movie Kingdom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & ROOT ========== */
+:root {
+  --bg:#09090e; --surface:#111118; --surface2:#1a1a26; --surface3:#22223a;
+  --gold:#c9a84c; --gold2:#f0d080; --gold3:#8a6a20; --crimson:#9b2335;
+  --text:#ede8df; --muted:#7a788a; --border:rgba(201,168,76,0.12);
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;}
+
+/* ========== INTRO SCREEN ========== */
+#intro{position:fixed;inset:0;z-index:9999;background:#000;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.door-left,.door-right{
+  position:absolute;top:0;width:50%;height:100%;background:#0a0a0e;
+  transition:transform 1.4s cubic-bezier(.7,0,.2,1);
+  display:flex;align-items:center;will-change:transform;
+}
+.door-left{left:0;justify-content:flex-end;
+  border-right:1px solid rgba(201,168,76,0.3);}
+.door-right{right:0;justify-content:flex-start;
+  border-left:1px solid rgba(201,168,76,0.3);}
+.door-ornament{width:80px;height:80px;opacity:0.15;flex-shrink:0;
+  background:radial-gradient(circle,rgba(201,168,76,0.6) 0%,transparent 70%);}
+#intro.open .door-left{transform:translateX(-100%);}
+#intro.open .door-right{transform:translateX(100%);}
+.intro-title{
+  position:absolute;text-align:center;z-index:2;pointer-events:none;
+  animation:titleGlow 2s ease-in-out infinite alternate;
+}
+.intro-crown{font-size:3rem;margin-bottom:8px;opacity:0.85;}
+.intro-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.6rem,5vw,3.4rem);
+  color:var(--gold2);
+  text-shadow:0 0 40px rgba(201,168,76,0.8),0 0 80px rgba(201,168,76,0.3);
+  letter-spacing:4px;line-height:1.2;
+}
+.intro-sub{
+  font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:6px;
+  color:rgba(201,168,76,0.6);margin-top:10px;text-transform:uppercase;
+}
+@keyframes titleGlow{
+  from{text-shadow:0 0 30px rgba(201,168,76,0.6),0 0 60px rgba(201,168,76,0.2);}
+  to{text-shadow:0 0 60px rgba(201,168,76,1),0 0 100px rgba(201,168,76,0.5);}
+}
+#intro.fade-out{opacity:0;transition:opacity 0.8s ease;pointer-events:none;}
+
+/* ========== SITE HEADER ========== */
+#site-header{
+  padding:20px 32px 0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.site-logo{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1rem,2.5vw,1.6rem);
+  color:var(--gold2);
+  text-shadow:0 0 20px rgba(201,168,76,0.4);
+  letter-spacing:2px;
+}
+/* USER SWITCHER */
+.user-area{display:flex;align-items:center;gap:8px;}
+.user-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:6px 14px;color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:13px;cursor:pointer;transition:border-color .2s;display:flex;
+  align-items:center;gap:8px;
+}
+.user-btn:hover{border-color:rgba(201,168,76,0.4);}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--gold3);
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:600;color:var(--gold2);flex-shrink:0;}
+.user-dropdown{
+  position:absolute;right:0;top:calc(100% + 6px);
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  min-width:200px;z-index:200;padding:8px;display:none;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+}
+.user-wrap{position:relative;}
+.user-wrap:hover .user-dropdown,.user-dropdown:hover{display:block;}
+.ud-user{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:8px;cursor:pointer;transition:background .15s;}
+.ud-user:hover{background:rgba(201,168,76,0.08);}
+.ud-user.active{background:rgba(201,168,76,0.1);}
+.ud-name{font-size:13px;}
+.ud-sep{height:1px;background:var(--border);margin:6px 0;}
+.ud-add{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:8px;cursor:pointer;color:var(--gold);font-size:13px;
+  transition:background .15s;}
+.ud-add:hover{background:rgba(201,168,76,0.08);}
+.ud-add-input{
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:6px 10px;color:var(--text);font-size:13px;width:100%;margin-top:6px;
+  display:none;
+}
+.ud-add-input.on{display:block;}
+.ud-add-btn{background:var(--gold3);border:none;border-radius:6px;
+  padding:6px 12px;color:var(--gold2);font-size:12px;cursor:pointer;
+  margin-top:6px;width:100%;display:none;}
+.ud-add-btn.on{display:block;}
+
+/* ========== API BANNER ========== */
+#api-banner{
+  background:#140f0f;border:1px solid rgba(155,35,53,0.4);border-radius:10px;
+  padding:14px 20px;margin:14px 32px;font-size:13px;color:#f0a0a0;line-height:1.7;
+}
+#api-banner a{color:var(--gold);text-decoration:none;}
+#api-banner.hidden{display:none;}
+.api-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.api-row input{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);
+  border-radius:6px;padding:7px 12px;color:var(--text);font-size:13px;width:230px;}
+.api-row button{background:var(--crimson);border:none;border-radius:6px;
+  padding:7px 18px;color:#fff;font-size:13px;cursor:pointer;}
+
+/* ========== MAIN ========== */
+.main{padding:18px 32px 60px;}
+
+/* ========== TABS ========== */
+.tabs{display:flex;gap:0;margin-bottom:22px;border-bottom:1px solid var(--border);}
+.tab{
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;
+  padding:12px 22px;cursor:pointer;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .2s,border-color .2s;text-transform:uppercase;
+}
+.tab:hover{color:var(--gold);}
+.tab.active{color:var(--gold2);border-bottom-color:var(--gold);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ========== RECENTLY WATCHED ========== */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-family:'Cinzel',serif;font-size:1rem;letter-spacing:2px;
+  color:var(--gold);text-transform:uppercase;}
+.clear-btn{font-size:12px;color:var(--muted);background:none;
+  border:1px solid var(--border);padding:4px 12px;border-radius:6px;
+  cursor:pointer;transition:color .2s,border-color .2s;}
+.clear-btn:hover{color:var(--crimson);border-color:var(--crimson);}
+#recent-grid-en,#recent-grid-hi,#recent-grid-ml,#recent-grid-ta,#recent-grid-yt{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;
+  margin-bottom:24px;
+}
+.no-recent{color:var(--muted);font-size:13px;padding:12px 0 24px;text-align:center;}
+.rc{background:var(--surface);border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);cursor:pointer;
+  transition:transform .2s,border-color .2s;position:relative;}
+.rc:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.35);}
+.rc img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--surface2);}
+.rc-yt-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface2);}
+.rc-info{padding:7px 9px 9px;}
+.rc-title{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.rc-rm{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.75);border:none;
+  color:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;
+  cursor:pointer;display:none;align-items:center;justify-content:center;}
+.rc:hover .rc-rm{display:flex;}
+
+/* ========== SEARCH SECTION ========== */
+.search-sec{background:var(--surface);border-radius:14px;padding:24px;
+  margin-bottom:20px;border:1px solid var(--border);}
+.section-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;}
+.srch-wrap{flex:1;min-width:200px;position:relative;}
+.srch-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);padding:11px 16px;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;transition:border-color .2s;}
+.srch-wrap input:focus{outline:none;border-color:var(--gold);}
+#sug-en,#sug-hi,#sug-ml,#sug-ta,#sug-yt{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  z-index:100;max-height:320px;overflow-y:auto;
+}
+.sug-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;
+  transition:background .15s;border-bottom:1px solid var(--border);}
+.sug-item:last-child{border-bottom:none;}
+.sug-item:hover{background:rgba(201,168,76,.07);}
+.sug-poster{width:32px;height:46px;border-radius:4px;object-fit:cover;
+  background:var(--bg);flex-shrink:0;}
+.sug-thumb{width:56px;height:32px;border-radius:4px;object-fit:cover;
+  background:var(--bg);flex-shrink:0;}
+.sug-no-img{width:32px;height:46px;border-radius:4px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  font-size:16px;flex-shrink:0;}
+.sug-yt-no-img{width:56px;height:32px;border-radius:4px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  font-size:16px;flex-shrink:0;}
+.sug-info{flex:1;min-width:0;}
+.sug-title{font-size:13px;font-weight:500;}
+.sug-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.sug-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;flex-shrink:0;}
+.badge-movie{background:rgba(201,168,76,.15);color:var(--gold);}
+.badge-series{background:rgba(155,35,53,.2);color:#f07a7c;}
+.badge-yt{background:rgba(255,0,0,.15);color:#ff6b6b;}
+.ctrl-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px;}
+.ctrl-grp{display:flex;flex-direction:column;gap:5px;}
+.ctrl-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;}
+select,.num-in{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
+.num-in{width:72px;}
+.series-ctrl{display:none;gap:10px;flex-wrap:wrap;}
+.series-ctrl.on{display:flex;}
+.play-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:var(--radius);padding:9px 26px;
+  color:#0a0908;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;transition:opacity .2s,transform .1s;
+}
+.play-btn:hover{opacity:.9;transform:translateY(-1px);}
+
+/* ========== NOW PLAYING BAR ========== */
+.now-bar{background:var(--surface);border:1px solid rgba(201,168,76,.2);
+  border-radius:12px;padding:12px 20px;margin-bottom:18px;
+  display:none;gap:12px;align-items:center;flex-wrap:wrap;}
+.now-bar.on{display:flex;}
+.np-img{width:44px;height:62px;border-radius:5px;object-fit:cover;
+  background:var(--surface2);flex-shrink:0;}
+.np-yt-img{width:76px;height:44px;border-radius:5px;object-fit:cover;
+  background:var(--surface2);flex-shrink:0;}
+.np-det{flex:1;min-width:0;}
+.np-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.np-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.np-pill{font-size:10px;padding:2px 8px;border-radius:16px;margin-right:5px;}
+.pill-movie{background:rgba(201,168,76,.15);color:var(--gold);}
+.pill-series{background:rgba(155,35,53,.2);color:#f07a7c;}
+.np-star{font-size:12px;color:var(--gold);}
+
+/* ========== PLAYER ========== */
+.player-outer{background:var(--surface);border-radius:14px;overflow:hidden;
+  margin-bottom:22px;border:1px solid var(--border);display:none;}
+.player-outer.on{display:block;}
+.player-stage{width:100%;background:#000;position:relative;}
+.player-stage .iframe-wrap{position:relative;padding-top:56.25%;}
+.vid-frame{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+.player-stage.default .iframe-wrap{max-width:760px;margin:0 auto;padding-top:0;height:430px;}
+.player-stage.theatre .iframe-wrap{padding-top:0;height:75vh;}
+.player-controls{
+  padding:10px 16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.view-btns{display:flex;gap:4px;}
+.vbtn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:5px 12px;color:var(--muted);font-size:12px;cursor:pointer;
+  transition:color .15s,border-color .15s;}
+.vbtn.active{color:var(--gold);border-color:rgba(201,168,76,.5);}
+.vbtn:hover{color:var(--gold);}
+.server-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.server-lbl{font-size:11px;color:var(--muted);}
+.server-select{background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;cursor:pointer;
+  min-width:160px;}
+.server-select:focus{outline:none;border-color:var(--gold);}
+
+/* SERVER HEALTH DOTS */
+.srv-health-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:5px 10px;color:var(--muted);font-size:11px;cursor:pointer;
+  transition:color .15s,border-color .15s;white-space:nowrap;
+}
+.srv-health-btn:hover{color:var(--gold);border-color:rgba(201,168,76,.4);}
+.dot-green{color:#4caf82;}
+.dot-yellow{color:#c9a84c;}
+.dot-red{color:#9b2335;}
+.dot-grey{color:#555;}
+.srv-manage-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:5px 10px;color:var(--muted);font-size:11px;cursor:pointer;
+}
+.srv-manage-btn:hover{color:var(--gold);}
+
+/* SERVER MANAGER PANEL */
+.srv-panel{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:16px;margin:10px 16px;display:none;
+}
+.srv-panel.on{display:block;}
+.srv-panel-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:12px;text-transform:uppercase;}
+.srv-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.srv-row{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:var(--bg);border-radius:8px;border:1px solid var(--border);}
+.srv-dot{font-size:14px;flex-shrink:0;min-width:16px;text-align:center;}
+.srv-name{flex:1;font-size:13px;}
+.srv-status-txt{font-size:11px;color:var(--muted);min-width:80px;text-align:right;}
+.srv-toggle{background:none;border:1px solid var(--border);border-radius:5px;
+  padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;}
+.srv-toggle:hover{border-color:rgba(201,168,76,.4);color:var(--gold);}
+.srv-toggle.hidden-srv{border-color:rgba(155,35,53,.4);color:#f07a7c;}
+.srv-panel-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.srv-act-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:7px;padding:7px 16px;
+  color:#0a0908;font-size:12px;font-weight:700;cursor:pointer;
+}
+.srv-act-btn.secondary{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:400;
+}
+.srv-act-btn.secondary:hover{border-color:rgba(201,168,76,.4);color:var(--gold);}
+
+/* ADD SERVER ROW */
+.add-srv-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.add-srv-inp{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;}
+.add-srv-inp:focus{outline:none;border-color:var(--gold);}
+.add-srv-btn{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:7px 14px;color:var(--gold);font-size:12px;cursor:pointer;}
+.add-srv-btn:hover{border-color:rgba(201,168,76,.5);}
+
+/* SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .7s linear infinite;
+  vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ========== YOUTUBE TAB ========== */
+.yt-search-row{display:flex;gap:10px;flex-wrap:wrap;}
+.yt-url-wrap{flex:1;min-width:220px;position:relative;}
+.yt-url-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);padding:11px 16px;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;}
+.yt-url-wrap input:focus{outline:none;border-color:var(--gold);}
+.yt-load-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:var(--radius);padding:9px 22px;
+  color:#0a0908;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;}
+
+/* MP3/MP4 CONVERTER */
+.converter-sec{background:var(--surface);border-radius:14px;padding:22px;
+  margin-top:0;border:1px solid var(--border);}
+.conv-info{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;}
+.conv-thumb{width:120px;height:68px;border-radius:8px;object-fit:cover;
+  background:var(--surface2);flex-shrink:0;}
+.conv-det{flex:1;}
+.conv-title{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);margin-bottom:4px;}
+.conv-meta{font-size:12px;color:var(--muted);}
+.conv-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.conv-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 18px;color:var(--text);font-size:13px;cursor:pointer;
+  transition:border-color .2s,color .2s;text-decoration:none;
+}
+.conv-btn:hover{border-color:rgba(201,168,76,.4);color:var(--gold);}
+.conv-btn.primary{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border-color:transparent;color:#0a0908;font-weight:600;
+}
+.conv-btn.primary:hover{opacity:.9;color:#0a0908;}
+.conv-iframe-wrap{border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+
+/* ========== EINTHUSAN HELPER ========== */
+.ein-helper{background:var(--surface);border-radius:14px;padding:20px;
+  margin-bottom:18px;border:1px solid var(--border);}
+.ein-helper-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.ein-helper-row input{flex:1;min-width:200px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;}
+.ein-helper-row input:focus{outline:none;border-color:var(--gold);}
+.ein-dl-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:var(--radius);padding:9px 18px;
+  color:#0a0908;font-family:'Cinzel',serif;font-size:12px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;transition:opacity .2s;}
+.ein-dl-btn:hover{opacity:.9;}
+.ein-browse-btn{
+  background:var(--surface2);border:1px solid rgba(201,168,76,.3);border-radius:var(--radius);
+  padding:9px 16px;color:var(--gold);font-size:12px;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  transition:background .2s,border-color .2s;white-space:nowrap;
+}
+.ein-browse-btn:hover{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.6);}
+.ein-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;}
+.ein-links-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+@media(max-width:640px){
+  #site-header{padding:14px 16px 0;}
+  .main{padding:12px 16px 40px;}
+  #api-banner{margin:10px 16px;}
+  .tab{padding:10px 14px;font-size:11px;letter-spacing:1px;}
+  .player-stage.default .iframe-wrap{height:240px;}
+  .player-stage.theatre .iframe-wrap{height:56vw;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== INTRO ===== -->
+<div id="intro">
+  <div class="door-left"><div class="door-ornament"></div></div>
+  <div class="door-right"><div class="door-ornament"></div></div>
+  <div class="intro-title">
+    <div class="intro-crown">👑</div>
+    <div class="intro-name">Joel's<br>Movie Kingdom</div>
+    <div class="intro-sub">Your Personal Cinema</div>
+  </div>
+</div>
+
+<!-- ===== SITE HEADER ===== -->
+<div id="site-header">
+  <div class="site-logo">👑 Joel's Movie Kingdom</div>
+  <div class="user-area">
+    <div class="user-wrap">
+      <button class="user-btn" id="current-user-btn">
+        <div class="user-avatar" id="user-avatar-hdr">J</div>
+        <span id="user-name-hdr">Joel</span> ▾
+      </button>
+      <div class="user-dropdown" id="user-dropdown">
+        <div id="ud-users-list"></div>
+        <div class="ud-sep"></div>
+        <div class="ud-add" onclick="toggleAddUser()">＋ Add New User</div>
+        <input type="text" class="ud-add-input" id="new-user-input" placeholder="Enter name…" onkeydown="if(event.key==='Enter')createUser()" />
+        <button class="ud-add-btn" id="new-user-btn" onclick="createUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== API BANNER ===== -->
+<div id="api-banner">
+  <strong>One-time setup:</strong> A free TMDB API key powers all movie/TV search and posters. It takes ~2 min and never expires.<br>
+  → <a href="https://www.themoviedb.org/signup" target="_blank">Create free TMDB account</a> then: Settings → API → copy the <em>API Key (v3 auth)</em>
+  <div class="api-row">
+    <input type="text" id="api-key-input" placeholder="Paste TMDB API key here" />
+    <button onclick="saveKey()">Save &amp; Start</button>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="en" onclick="switchTab('en')">🇺🇸 English</div>
+    <div class="tab" data-tab="ml" onclick="switchTab('ml')">🇮🇳 Malayalam</div>
+    <div class="tab" data-tab="hi" onclick="switchTab('hi')">🇮🇳 Hindi</div>
+    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Tamil</div>
+    <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
+  </div>
+
+  <!-- ========== ENGLISH TAB ========== -->
+  <div class="tab-content active" id="tab-en">
+    <div class="sec-header">
+      <div class="sec-title">Recently Watched</div>
+      <button class="clear-btn" onclick="clearRecent('en')">Clear</button>
+    </div>
+    <div id="recent-grid-en"></div>
+    <div class="no-recent" id="no-recent-en">Nothing watched yet.</div>
+
+    <div class="search-sec">
+      <div class="section-label">Search Movie or Series</div>
+      <div class="search-row">
+        <div class="srch-wrap">
+          <input type="text" id="srch-en" placeholder="Type title…" autocomplete="off" />
+          <div id="sug-en"></div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="series-ctrl" id="sc-en">
+          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
+            <input type="number" class="num-in" id="s-en" value="1" min="1" /></div>
+          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
+            <input type="number" class="num-in" id="e-en" value="1" min="1" /></div>
+        </div>
+        <button class="play-btn" onclick="playMovie('en')">▶ Play</button>
+      </div>
+    </div>
+
+    <div class="now-bar" id="nb-en">
+      <img class="np-img" id="npi-en" src="" alt="" />
+      <div class="np-det">
+        <div class="np-title" id="npt-en"></div>
+        <div class="np-meta" id="npm-en"></div>
+      </div>
+      <div class="np-star" id="nps-en"></div>
+    </div>
+
+    <div class="player-outer" id="po-en">
+      <div class="player-stage default" id="ps-en">
+        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-en"
+          allowfullscreen referrerpolicy="origin"
+          allow="autoplay; fullscreen; encrypted-media"></iframe></div>
+      </div>
+      <div class="player-controls">
+        <div class="view-btns">
+          <button class="vbtn active" onclick="setView('en','default',this)">Default</button>
+          <button class="vbtn" onclick="setView('en','theatre',this)">Theatre</button>
+          <button class="vbtn" onclick="fsPlayer('en')">⛶ Fullscreen</button>
+        </div>
+        <div class="server-wrap">
+          <span class="server-lbl">Server:</span>
+          <select class="server-select" id="srv-en" onchange="changeServer('en')"></select>
+          <button class="srv-health-btn" onclick="testAllServers('en')">⚡ Test Servers</button>
+          <button class="srv-manage-btn" onclick="toggleSrvPanel('en')">⚙ Manage</button>
+        </div>
+      </div>
+      <div class="srv-panel" id="srv-panel-en">
+        <div class="srv-panel-title">Server Manager</div>
+        <div class="srv-list" id="srv-list-en"></div>
+        <div class="add-srv-row">
+          <input class="add-srv-inp" id="add-srv-name-en" placeholder="Server name (e.g. MyServer)" />
+          <input class="add-srv-inp" id="add-srv-movie-en" placeholder="Movie URL template (use {id})" />
+          <input class="add-srv-inp" id="add-srv-tv-en" placeholder="TV URL template (use {id},{s},{e})" />
+          <button class="add-srv-btn" onclick="addCustomServer('en')">＋ Add</button>
+        </div>
+        <div class="srv-panel-actions" style="margin-top:12px;">
+          <button class="srv-act-btn" onclick="testAllServers('en')">⚡ Test All Servers</button>
+          <button class="srv-act-btn secondary" onclick="resetServers('en')">↺ Reset to Defaults</button>
+          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('en')">🗑 Remove Red Servers</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MALAYALAM TAB ========== -->
+  <div class="tab-content" id="tab-ml">
+    <div class="sec-header">
+      <div class="sec-title">Recently Watched</div>
+      <button class="clear-btn" onclick="clearRecent('ml')">Clear</button>
+    </div>
+    <div id="recent-grid-ml"></div>
+    <div class="no-recent" id="no-recent-ml">Nothing watched yet.</div>
+
+    <div class="search-sec">
+      <div class="section-label">Search Malayalam Movie or Series</div>
+      <div class="search-row">
+        <div class="srch-wrap">
+          <input type="text" id="srch-ml" placeholder="Type title…" autocomplete="off" />
+          <div id="sug-ml"></div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="series-ctrl" id="sc-ml">
+          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
+            <input type="number" class="num-in" id="s-ml" value="1" min="1" /></div>
+          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
+            <input type="number" class="num-in" id="e-ml" value="1" min="1" /></div>
+        </div>
+        <button class="play-btn" onclick="playMovie('ml')">▶ Play</button>
+      </div>
+    </div>
+
+    <div class="now-bar" id="nb-ml">
+      <img class="np-img" id="npi-ml" src="" alt="" />
+      <div class="np-det">
+        <div class="np-title" id="npt-ml"></div>
+        <div class="np-meta" id="npm-ml"></div>
+      </div>
+      <div class="np-star" id="nps-ml"></div>
+    </div>
+
+    <div class="player-outer" id="po-ml">
+      <div class="player-stage default" id="ps-ml">
+        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-ml"
+          allowfullscreen referrerpolicy="origin"
+          allow="autoplay; fullscreen; encrypted-media"></iframe></div>
+      </div>
+      <div class="player-controls">
+        <div class="view-btns">
+          <button class="vbtn active" onclick="setView('ml','default',this)">Default</button>
+          <button class="vbtn" onclick="setView('ml','theatre',this)">Theatre</button>
+          <button class="vbtn" onclick="fsPlayer('ml')">⛶ Fullscreen</button>
+        </div>
+        <div class="server-wrap">
+          <span class="server-lbl">Server:</span>
+          <select class="server-select" id="srv-ml" onchange="changeServer('ml')"></select>
+          <button class="srv-health-btn" onclick="testAllServers('ml')">⚡ Test Servers</button>
+          <button class="srv-manage-btn" onclick="toggleSrvPanel('ml')">⚙ Manage</button>
+        </div>
+      </div>
+      <div class="srv-panel" id="srv-panel-ml">
+        <div class="srv-panel-title">Server Manager</div>
+        <div class="srv-list" id="srv-list-ml"></div>
+        <div class="add-srv-row">
+          <input class="add-srv-inp" id="add-srv-name-ml" placeholder="Server name" />
+          <input class="add-srv-inp" id="add-srv-movie-ml" placeholder="Movie URL (use {id})" />
+          <input class="add-srv-inp" id="add-srv-tv-ml" placeholder="TV URL (use {id},{s},{e})" />
+          <button class="add-srv-btn" onclick="addCustomServer('ml')">＋ Add</button>
+        </div>
+        <div class="srv-panel-actions" style="margin-top:12px;">
+          <button class="srv-act-btn" onclick="testAllServers('ml')">⚡ Test All Servers</button>
+          <button class="srv-act-btn secondary" onclick="resetServers('ml')">↺ Reset to Defaults</button>
+          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('ml')">🗑 Remove Red Servers</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Einthusan Helper -->
+    <div class="ein-helper">
+      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">
+        Browse Einthusan directly for Malayalam movies, or paste a URL below to download via SaveTheVideo.
+      </p>
+      <div class="ein-links-row">
+        <a class="ein-browse-btn" href="https://einthusan.tv/movie/browse/?lang=malayalam" target="_blank">🌐 Browse Malayalam on Einthusan</a>
+      </div>
+      <div class="ein-helper-row" style="margin-top:12px;">
+        <input type="text" id="ein-url-ml" placeholder="https://einthusan.tv/movie/watch/…" />
+        <button class="ein-dl-btn" onclick="openSaveTheVideo('ml')">⬇ Get MP4</button>
+      </div>
+      <div class="ein-note">Tip: Click "Browse Malayalam on Einthusan" → find your movie → copy the URL → paste above → hit Get MP4.</div>
+    </div>
+  </div>
+
+  <!-- ========== HINDI TAB ========== -->
+  <div class="tab-content" id="tab-hi">
+    <div class="sec-header">
+      <div class="sec-title">Recently Watched</div>
+      <button class="clear-btn" onclick="clearRecent('hi')">Clear</button>
+    </div>
+    <div id="recent-grid-hi"></div>
+    <div class="no-recent" id="no-recent-hi">Nothing watched yet.</div>
+
+    <div class="search-sec">
+      <div class="section-label">Search Hindi Movie or Series</div>
+      <div class="search-row">
+        <div class="srch-wrap">
+          <input type="text" id="srch-hi" placeholder="Type title…" autocomplete="off" />
+          <div id="sug-hi"></div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="series-ctrl" id="sc-hi">
+          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
+            <input type="number" class="num-in" id="s-hi" value="1" min="1" /></div>
+          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
+            <input type="number" class="num-in" id="e-hi" value="1" min="1" /></div>
+        </div>
+        <button class="play-btn" onclick="playMovie('hi')">▶ Play</button>
+      </div>
+    </div>
+
+    <div class="now-bar" id="nb-hi">
+      <img class="np-img" id="npi-hi" src="" alt="" />
+      <div class="np-det">
+        <div class="np-title" id="npt-hi"></div>
+        <div class="np-meta" id="npm-hi"></div>
+      </div>
+      <div class="np-star" id="nps-hi"></div>
+    </div>
+
+    <div class="player-outer" id="po-hi">
+      <div class="player-stage default" id="ps-hi">
+        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-hi"
+          allowfullscreen referrerpolicy="origin"
+          allow="autoplay; fullscreen; encrypted-media"></iframe></div>
+      </div>
+      <div class="player-controls">
+        <div class="view-btns">
+          <button class="vbtn active" onclick="setView('hi','default',this)">Default</button>
+          <button class="vbtn" onclick="setView('hi','theatre',this)">Theatre</button>
+          <button class="vbtn" onclick="fsPlayer('hi')">⛶ Fullscreen</button>
+        </div>
+        <div class="server-wrap">
+          <span class="server-lbl">Server:</span>
+          <select class="server-select" id="srv-hi" onchange="changeServer('hi')"></select>
+          <button class="srv-health-btn" onclick="testAllServers('hi')">⚡ Test Servers</button>
+          <button class="srv-manage-btn" onclick="toggleSrvPanel('hi')">⚙ Manage</button>
+        </div>
+      </div>
+      <div class="srv-panel" id="srv-panel-hi">
+        <div class="srv-panel-title">Server Manager</div>
+        <div class="srv-list" id="srv-list-hi"></div>
+        <div class="add-srv-row">
+          <input class="add-srv-inp" id="add-srv-name-hi" placeholder="Server name" />
+          <input class="add-srv-inp" id="add-srv-movie-hi" placeholder="Movie URL (use {id})" />
+          <input class="add-srv-inp" id="add-srv-tv-hi" placeholder="TV URL (use {id},{s},{e})" />
+          <button class="add-srv-btn" onclick="addCustomServer('hi')">＋ Add</button>
+        </div>
+        <div class="srv-panel-actions" style="margin-top:12px;">
+          <button class="srv-act-btn" onclick="testAllServers('hi')">⚡ Test All Servers</button>
+          <button class="srv-act-btn secondary" onclick="resetServers('hi')">↺ Reset to Defaults</button>
+          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('hi')">🗑 Remove Red Servers</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ein-helper">
+      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">
+        Browse Einthusan directly for Hindi movies, or paste a URL below to download via SaveTheVideo.
+      </p>
+      <div class="ein-links-row">
+        <a class="ein-browse-btn" href="https://einthusan.tv/movie/browse/?lang=hindi" target="_blank">🌐 Browse Hindi on Einthusan</a>
+      </div>
+      <div class="ein-helper-row" style="margin-top:12px;">
+        <input type="text" id="ein-url-hi" placeholder="https://einthusan.tv/movie/watch/…" />
+        <button class="ein-dl-btn" onclick="openSaveTheVideo('hi')">⬇ Get MP4</button>
+      </div>
+      <div class="ein-note">Tip: Click "Browse Hindi on Einthusan" → find your movie → copy the URL → paste above → hit Get MP4.</div>
+    </div>
+  </div>
+
+  <!-- ========== TAMIL TAB ========== -->
+  <div class="tab-content" id="tab-ta">
+    <div class="sec-header">
+      <div class="sec-title">Recently Watched</div>
+      <button class="clear-btn" onclick="clearRecent('ta')">Clear</button>
+    </div>
+    <div id="recent-grid-ta"></div>
+    <div class="no-recent" id="no-recent-ta">Nothing watched yet.</div>
+
+    <div class="search-sec">
+      <div class="section-label">Search Tamil Movie or Series</div>
+      <div class="search-row">
+        <div class="srch-wrap">
+          <input type="text" id="srch-ta" placeholder="Type title…" autocomplete="off" />
+          <div id="sug-ta"></div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="series-ctrl" id="sc-ta">
+          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
+            <input type="number" class="num-in" id="s-ta" value="1" min="1" /></div>
+          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
+            <input type="number" class="num-in" id="e-ta" value="1" min="1" /></div>
+        </div>
+        <button class="play-btn" onclick="playMovie('ta')">▶ Play</button>
+      </div>
+    </div>
+
+    <div class="now-bar" id="nb-ta">
+      <img class="np-img" id="npi-ta" src="" alt="" />
+      <div class="np-det">
+        <div class="np-title" id="npt-ta"></div>
+        <div class="np-meta" id="npm-ta"></div>
+      </div>
+      <div class="np-star" id="nps-ta"></div>
+    </div>
+
+    <div class="player-outer" id="po-ta">
+      <div class="player-stage default" id="ps-ta">
+        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-ta"
+          allowfullscreen referrerpolicy="origin"
+          allow="autoplay; fullscreen; encrypted-media"></iframe></div>
+      </div>
+      <div class="player-controls">
+        <div class="view-btns">
+          <button class="vbtn active" onclick="setView('ta','default',this)">Default</button>
+          <button class="vbtn" onclick="setView('ta','theatre',this)">Theatre</button>
+          <button class="vbtn" onclick="fsPlayer('ta')">⛶ Fullscreen</button>
+        </div>
+        <div class="server-wrap">
+          <span class="server-lbl">Server:</span>
+          <select class="server-select" id="srv-ta" onchange="changeServer('ta')"></select>
+          <button class="srv-health-btn" onclick="testAllServers('ta')">⚡ Test Servers</button>
+          <button class="srv-manage-btn" onclick="toggleSrvPanel('ta')">⚙ Manage</button>
+        </div>
+      </div>
+      <div class="srv-panel" id="srv-panel-ta">
+        <div class="srv-panel-title">Server Manager</div>
+        <div class="srv-list" id="srv-list-ta"></div>
+        <div class="add-srv-row">
+          <input class="add-srv-inp" id="add-srv-name-ta" placeholder="Server name" />
+          <input class="add-srv-inp" id="add-srv-movie-ta" placeholder="Movie URL (use {id})" />
+          <input class="add-srv-inp" id="add-srv-tv-ta" placeholder="TV URL (use {id},{s},{e})" />
+          <button class="add-srv-btn" onclick="addCustomServer('ta')">＋ Add</button>
+        </div>
+        <div class="srv-panel-actions" style="margin-top:12px;">
+          <button class="srv-act-btn" onclick="testAllServers('ta')">⚡ Test All Servers</button>
+          <button class="srv-act-btn secondary" onclick="resetServers('ta')">↺ Reset to Defaults</button>
+          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('ta')">🗑 Remove Red Servers</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ein-helper">
+      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">
+        Browse Einthusan directly for Tamil movies, or paste a URL below to download via SaveTheVideo.
+      </p>
+      <div class="ein-links-row">
+        <a class="ein-browse-btn" href="https://einthusan.tv/movie/browse/?lang=tamil" target="_blank">🌐 Browse Tamil on Einthusan</a>
+      </div>
+      <div class="ein-helper-row" style="margin-top:12px;">
+        <input type="text" id="ein-url-ta" placeholder="https://einthusan.tv/movie/watch/…" />
+        <button class="ein-dl-btn" onclick="openSaveTheVideo('ta')">⬇ Get MP4</button>
+      </div>
+      <div class="ein-note">Tip: Click "Browse Tamil on Einthusan" → find your movie → copy the URL → paste above → hit Get MP4.</div>
+    </div>
+  </div>
+
+  <!-- ========== YOUTUBE TAB ========== -->
+  <div class="tab-content" id="tab-yt">
+    <div class="sec-header">
+      <div class="sec-title">Recently Watched</div>
+      <button class="clear-btn" onclick="clearRecent('yt')">Clear</button>
+    </div>
+    <div id="recent-grid-yt"></div>
+    <div class="no-recent" id="no-recent-yt">No YouTube videos watched yet.</div>
+
+    <div class="search-sec">
+      <div class="section-label">Paste YouTube URL or Search (results load inline)</div>
+      <div class="yt-search-row">
+        <div class="yt-url-wrap">
+          <input type="text" id="yt-url" placeholder="Paste YouTube link or type to search…" autocomplete="off" />
+          <div id="sug-yt"></div>
+        </div>
+        <button class="yt-load-btn" onclick="loadYT()">▶ Load</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+        Typing will show search suggestions you can click to play inline. Paste a URL directly and hit Load to skip search.
+      </div>
+    </div>
+
+    <div class="now-bar" id="nb-yt">
+      <img class="np-yt-img" id="npi-yt" src="" alt="" />
+      <div class="np-det">
+        <div class="np-title" id="npt-yt"></div>
+        <div class="np-meta" id="npm-yt"></div>
+      </div>
+    </div>
+
+    <div class="player-outer" id="po-yt">
+      <div class="player-stage default" id="ps-yt">
+        <div class="iframe-wrap">
+          <iframe class="vid-frame" id="vf-yt"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="player-controls">
+        <div class="view-btns">
+          <button class="vbtn active" onclick="setView('yt','default',this)">Default</button>
+          <button class="vbtn" onclick="setView('yt','theatre',this)">Theatre</button>
+          <button class="vbtn" onclick="fsPlayer('yt')">⛶ Fullscreen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="converter-sec" id="conv-sec" style="display:none;">
+      <div class="section-label">🎵 MP3 / MP4 Converter &amp; Download</div>
+      <div class="conv-info">
+        <img class="conv-thumb" id="conv-thumb" src="" alt="" />
+        <div class="conv-det">
+          <div class="conv-title" id="conv-title">—</div>
+          <div class="conv-meta" id="conv-meta">Click a button below to convert &amp; download</div>
+        </div>
+      </div>
+      <div class="conv-actions">
+        <a class="conv-btn primary" id="conv-yout-btn" href="#" target="_blank">⬇ Download on yout.pw</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+
+<script>
+/* ================================================
+   GLOBAL STATE
+   ================================================ */
+let TMDB_KEY = 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
+let currentUser = localStorage.getItem('sv_user') || 'Joel';
+let timers = {};
+let selMovie = { en:null, hi:null, ml:null, ta:null };
+let currentYtId = null;
+
+/* ================================================
+   DEFAULT SERVER DEFINITIONS
+   ================================================ */
+const DEFAULT_SERVERS = {
+  autoembed:  {
+    label:'AutoEmbed',
+    movie: id => `https://player.autoembed.cc/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`,
+    tmdb: false
+  },
+  videasy: {
+    label:'Videasy',
+    movie: id => `https://player.videasy.net/movie/${id}`,
+    tv:   (id,s,e) => `https://player.videasy.net/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  vidfast: {
+    label:'VidFast',
+    movie: id => `https://vidfast.pro/movie/${id}`,
+    tv:   (id,s,e) => `https://vidfast.pro/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  vidlink: {
+    label:'VidLink',
+    movie: id => `https://vidlink.pro/movie/${id}?autoplay=true`,
+    tv:   (id,s,e) => `https://vidlink.pro/tv/${id}/${s}/${e}?autoplay=true`,
+    tmdb: true
+  },
+  vidsrcme: {
+    label:'VidSrc.me',
+    movie: id => `https://vidsrc.me/embed/movie?imdb=${id}`,
+    tv:   (id,s,e) => `https://vidsrc.me/embed/tv?imdb=${id}&season=${s}&episode=${e}`,
+    tmdb: false
+  },
+  vidsrcpro: {
+    label:'VidSrc.pro',
+    movie: id => `https://vidsrc.pro/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  vidsrcsu: {
+    label:'VidSrc.su',
+    movie: id => `https://vidsrc.su/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://vidsrc.su/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  embedsu: {
+    label:'Embed.su',
+    movie: id => `https://embed.su/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  multiembed: {
+    label:'SuperEmbed',
+    movie: id => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    tv:   (id,s,e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
+    tmdb: true
+  },
+  '2embed': {
+    label:'2Embed',
+    movie: id => `https://www.2embed.stream/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://www.2embed.stream/embed/tv/${id}/${s}/${e}`,
+    tmdb: false
+  },
+  pstream: {
+    label:'Pstream',
+    movie: id => `https://iframe.pstream.org/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://iframe.pstream.org/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  vsembed: {
+    label:'VSEmbed',
+    movie: id => `https://vsembed.ru/embed/movie?imdb=${id}`,
+    tv:   (id,s,e) => `https://vsembed.ru/embed/tv?imdb=${id}&season=${s}&episode=${e}`,
+    tmdb: false
+  },
+  vidbinge: {
+    label:'VidBinge',
+    movie: id => `https://vidbinge.dev/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://vidbinge.dev/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  embedapi: {
+    label:'EmbedAPI',
+    movie: id => `https://player.embed-api.stream/?id=${id}`,
+    tv:   (id,s,e) => `https://player.embed-api.stream/?id=${id}&s=${s}&e=${e}`,
+    tmdb: true
+  },
+  nontongo: {
+    label:'NontonGo',
+    movie: id => `https://www.nontongo.win/embed/movie/${id}`,
+    tv:   (id,s,e) => `https://www.nontongo.win/embed/tv/${id}/${s}/${e}`,
+    tmdb: true
+  },
+  godrive: {
+    label:'GoDrivePlayer',
+    movie: id => `https://godriveplayer.com/player.php?imdb=${id}`,
+    tv:   (id,s,e) => `https://godriveplayer.com/player.php?imdb=${id}&season=${s}&episode=${e}`,
+    tmdb: false
+  }
+};
+
+/* ========== SERVER HEALTH STATE ========== */
+// health: { [srvKey]: 'green'|'yellow'|'red'|'grey' }
+let serverHealth = {};
+
+/* ========== PER-LANG SERVER CONFIG (stored in localStorage) ========== */
+// Each lang has: { servers: [{key, label, movieTpl, tvTpl, tmdb, hidden}], ... }
+// "hidden" = user-disabled server
+
+function getSrvConfig(lang) {
+  try {
+    const raw = localStorage.getItem(`sv_srvs_${lang}`);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return buildDefaultSrvConfig();
+}
+
+function setSrvConfig(lang, cfg) {
+  localStorage.setItem(`sv_srvs_${lang}`, JSON.stringify(cfg));
+}
+
+function buildDefaultSrvConfig() {
+  return Object.entries(DEFAULT_SERVERS).map(([key, def]) => ({
+    key, label: def.label,
+    movieTpl: null, tvTpl: null, // null = use built-in function
+    tmdb: def.tmdb,
+    hidden: false,
+    custom: false
+  }));
+}
+
+function getActiveSrvs(lang) {
+  return getSrvConfig(lang).filter(s => !s.hidden);
+}
+
+/* Build embed URL from server config entry */
+function buildUrlFromConfig(srv, m, isTV, s, ep) {
+  const useId = srv.tmdb ? m.tmdbId : (m.imdbId || m.tmdbId);
+  if (srv.custom && srv.movieTpl) {
+    if (isTV && srv.tvTpl) {
+      return srv.tvTpl.replace('{id}',useId).replace('{s}',s).replace('{e}',ep);
+    }
+    return srv.movieTpl.replace('{id}',useId);
+  }
+  // Use built-in definition
+  const def = DEFAULT_SERVERS[srv.key];
+  if (!def) return '';
+  return isTV ? def.tv(useId, s, ep) : def.movie(useId);
+}
+
+/* ================================================
+   SERVER HEALTH TESTING
+   We test by fetching the server's homepage via a
+   no-cors fetch. Success = green, timeout = yellow,
+   error = red. This only checks reachability,
+   not whether a specific movie is available.
+   ================================================ */
+const SERVER_BASE_URLS = {
+  autoembed: 'https://player.autoembed.cc',
+  videasy:   'https://player.videasy.net',
+  vidfast:   'https://vidfast.pro',
+  vidlink:   'https://vidlink.pro',
+  vidsrcme:  'https://vidsrc.me',
+  vidsrcpro: 'https://vidsrc.pro',
+  vidsrcsu:  'https://vidsrc.su',
+  embedsu:   'https://embed.su',
+  multiembed:'https://multiembed.mov',
+  '2embed':  'https://www.2embed.stream',
+  pstream:   'https://iframe.pstream.org',
+  vsembed:   'https://vsembed.ru',
+  vidbinge:  'https://vidbinge.dev',
+  embedapi:  'https://player.embed-api.stream',
+  nontongo:  'https://www.nontongo.win',
+  godrive:   'https://godriveplayer.com'
+};
+
+async function testServer(srvKey, customUrl) {
+  const base = customUrl || SERVER_BASE_URLS[srvKey];
+  if (!base) return 'grey';
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    await fetch(base, { method:'HEAD', mode:'no-cors', signal: controller.signal });
+    clearTimeout(timeout);
+    return 'green'; // reached (no-cors always resolves if site up)
+  } catch(e) {
+    if (e.name === 'AbortError') return 'yellow'; // timeout
+    return 'red'; // network error / blocked
+  }
+}
+
+function dotChar(status) {
+  if (status === 'green')  return '🟢';
+  if (status === 'yellow') return '🟡';
+  if (status === 'red')    return '🔴';
+  return '⚫';
+}
+
+function dotLabel(status) {
+  if (status === 'green')  return 'Online';
+  if (status === 'yellow') return 'Slow';
+  if (status === 'red')    return 'Offline';
+  return 'Unknown';
+}
+
+async function testAllServers(lang) {
+  const cfg = getSrvConfig(lang);
+  renderSrvList(lang); // show spinners immediately
+  const promises = cfg.map(async srv => {
+    const customBase = srv.custom && srv.movieTpl
+      ? new URL(srv.movieTpl.replace('{id}','1')).origin
+      : null;
+    const status = await testServer(srv.key, customBase);
+    serverHealth[srv.key] = status;
+    renderSrvSelect(lang);
+    renderSrvList(lang);
+    return { key: srv.key, status };
+  });
+  await Promise.all(promises);
+}
+
+/* ================================================
+   RENDER SERVER SELECT DROPDOWN
+   ================================================ */
+function renderSrvSelect(lang) {
+  const sel = document.getElementById('srv-'+lang);
+  const active = getActiveSrvs(lang);
+  const currentVal = sel.value;
+  sel.innerHTML = active.map(srv => {
+    const h = serverHealth[srv.key] || 'grey';
+    const dot = dotChar(h);
+    return `<option value="${srv.key}">${dot} ${srv.label}</option>`;
+  }).join('');
+  // Restore selection if still available
+  if (active.find(s => s.key === currentVal)) sel.value = currentVal;
+}
+
+/* ================================================
+   RENDER SERVER MANAGER LIST
+   ================================================ */
+function renderSrvList(lang) {
+  const cfg = getSrvConfig(lang);
+  const list = document.getElementById('srv-list-'+lang);
+  list.innerHTML = cfg.map((srv, idx) => {
+    const h = serverHealth[srv.key] || 'grey';
+    const dot = dotChar(h);
+    const statusTxt = dotLabel(h);
+    const hiddenClass = srv.hidden ? 'hidden-srv' : '';
+    const toggleLabel = srv.hidden ? 'Enable' : 'Disable';
+    return `<div class="srv-row" id="srv-row-${lang}-${idx}">
+      <span class="srv-dot">${dot}</span>
+      <span class="srv-name">${srv.label}${srv.custom?'<span style="font-size:10px;color:var(--muted);margin-left:5px;">[custom]</span>':''}</span>
+      <span class="srv-status-txt">${statusTxt}</span>
+      <button class="srv-toggle ${hiddenClass}" onclick="toggleSrv('${lang}',${idx})">${toggleLabel}</button>
+      ${srv.custom ? `<button class="srv-toggle" style="color:#f07a7c;border-color:rgba(155,35,53,.4);" onclick="deleteSrv('${lang}',${idx})">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleSrvPanel(lang) {
+  const panel = document.getElementById('srv-panel-'+lang);
+  panel.classList.toggle('on');
+  if (panel.classList.contains('on')) renderSrvList(lang);
+}
+
+function toggleSrv(lang, idx) {
+  const cfg = getSrvConfig(lang);
+  cfg[idx].hidden = !cfg[idx].hidden;
+  setSrvConfig(lang, cfg);
+  renderSrvList(lang);
+  renderSrvSelect(lang);
+}
+
+function deleteSrv(lang, idx) {
+  const cfg = getSrvConfig(lang);
+  cfg.splice(idx, 1);
+  setSrvConfig(lang, cfg);
+  renderSrvList(lang);
+  renderSrvSelect(lang);
+}
+
+function resetServers(lang) {
+  if (!confirm('Reset to default servers? Custom servers will be removed.')) return;
+  localStorage.removeItem(`sv_srvs_${lang}`);
+  renderSrvSelect(lang);
+  renderSrvList(lang);
+}
+
+function autoRemoveBroken(lang) {
+  const cfg = getSrvConfig(lang);
+  let count = 0;
+  cfg.forEach(srv => {
+    if (serverHealth[srv.key] === 'red') { srv.hidden = true; count++; }
+  });
+  setSrvConfig(lang, cfg);
+  renderSrvList(lang);
+  renderSrvSelect(lang);
+  alert(`Disabled ${count} offline server(s). You can re-enable them anytime in the manager.`);
+}
+
+function addCustomServer(lang) {
+  const name  = document.getElementById(`add-srv-name-${lang}`).value.trim();
+  const movie = document.getElementById(`add-srv-movie-${lang}`).value.trim();
+  const tv    = document.getElementById(`add-srv-tv-${lang}`).value.trim();
+  if (!name || !movie) { alert('Server name and movie URL template are required.'); return; }
+
+  const key = 'custom_' + Date.now();
+  const cfg = getSrvConfig(lang);
+  cfg.push({ key, label:name, movieTpl:movie, tvTpl:tv||null, tmdb:true, hidden:false, custom:true });
+  setSrvConfig(lang, cfg);
+
+  document.getElementById(`add-srv-name-${lang}`).value  = '';
+  document.getElementById(`add-srv-movie-${lang}`).value = '';
+  document.getElementById(`add-srv-tv-${lang}`).value    = '';
+
+  renderSrvList(lang);
+  renderSrvSelect(lang);
+}
+
+/* ================================================
+   BUILD EMBED URL
+   ================================================ */
+function buildSrc(lang, m, isTV, s, ep) {
+  const srvKey = document.getElementById('srv-'+lang).value;
+  const cfg = getSrvConfig(lang);
+  const srv = cfg.find(x => x.key === srvKey);
+  if (!srv) return '';
+  return buildUrlFromConfig(srv, m, isTV, s, ep);
+}
+
+/* ================================================
+   INIT
+   ================================================ */
+document.getElementById('api-banner').classList.add('hidden');
+initUsers();
+renderAllRecents();
+initIntro();
+initSearch('en'); initSearch('hi'); initSearch('ml'); initSearch('ta');
+initYTSearch();
+// Init server selects — also migrate any saved configs to include new servers
+['en','hi','ml','ta'].forEach(lang => {
+  const cfg = getSrvConfig(lang);
+  const existingKeys = new Set(cfg.map(s => s.key));
+  let changed = false;
+  Object.entries(DEFAULT_SERVERS).forEach(([key, def]) => {
+    if (!existingKeys.has(key)) {
+      cfg.push({ key, label: def.label, movieTpl: null, tvTpl: null, tmdb: def.tmdb, hidden: false, custom: false });
+      changed = true;
+    }
+  });
+  if (changed) setSrvConfig(lang, cfg);
+  renderSrvSelect(lang);
+});
+
+/* ================================================
+   INTRO
+   ================================================ */
+function initIntro() {
+  setTimeout(() => {
+    document.getElementById('intro').classList.add('open');
+    setTimeout(() => {
+      document.getElementById('intro').classList.add('fade-out');
+      setTimeout(() => document.getElementById('intro').style.display='none', 900);
+    }, 1600);
+  }, 900);
+}
+
+/* ================================================
+   TABS
+   ================================================ */
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab===t));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id==='tab-'+t));
+}
+
+/* ================================================
+   API KEY
+   ================================================ */
+function saveKey() {
+  const v = document.getElementById('api-key-input').value.trim();
+  if (!v) return;
+  TMDB_KEY = v; localStorage.setItem('tmdb_key', v);
+  document.getElementById('api-banner').classList.add('hidden');
+}
+
+/* ================================================
+   USERS
+   ================================================ */
+function getUsers() { try { return JSON.parse(localStorage.getItem('sv_users') || '["Joel"]'); } catch { return ['Joel']; } }
+function setUsers(a) { localStorage.setItem('sv_users', JSON.stringify(a)); }
+
+function initUsers() {
+  let users = getUsers();
+  if (!users.includes(currentUser)) { users.push(currentUser); setUsers(users); }
+  renderUserHeader();
+  renderUserDropdown();
+}
+
+function renderUserHeader() {
+  document.getElementById('user-name-hdr').textContent = currentUser;
+  document.getElementById('user-avatar-hdr').textContent = currentUser.charAt(0).toUpperCase();
+}
+
+function renderUserDropdown() {
+  const users = getUsers();
+  const list = document.getElementById('ud-users-list');
+  list.innerHTML = users.map(u => `
+    <div class="ud-user ${u===currentUser?'active':''}" onclick="switchUser('${u}')">
+      <div class="user-avatar">${u.charAt(0).toUpperCase()}</div>
+      <div class="ud-name">${u}</div>
+      ${users.length>1?`<span style="margin-left:auto;font-size:11px;color:var(--muted);cursor:pointer;"
+        onclick="event.stopPropagation();deleteUser('${u}')">✕</span>`:''}
+    </div>
+  `).join('');
+}
+
+function switchUser(name) {
+  currentUser = name;
+  localStorage.setItem('sv_user', name);
+  renderUserHeader();
+  renderUserDropdown();
+  renderAllRecents();
+  document.getElementById('user-dropdown').style.display='none';
+  setTimeout(()=>document.getElementById('user-dropdown').style.display='',200);
+}
+
+function toggleAddUser() {
+  const inp = document.getElementById('new-user-input');
+  const btn = document.getElementById('new-user-btn');
+  inp.classList.toggle('on'); btn.classList.toggle('on');
+  if (inp.classList.contains('on')) inp.focus();
+}
+
+function createUser() {
+  const name = document.getElementById('new-user-input').value.trim();
+  if (!name) return;
+  const users = getUsers();
+  if (!users.includes(name)) { users.push(name); setUsers(users); }
+  document.getElementById('new-user-input').value = '';
+  document.getElementById('new-user-input').classList.remove('on');
+  document.getElementById('new-user-btn').classList.remove('on');
+  switchUser(name);
+}
+
+function deleteUser(name) {
+  if (name === currentUser) { alert("Can't delete current user."); return; }
+  const users = getUsers().filter(u=>u!==name);
+  setUsers(users);
+  localStorage.removeItem(`sv_r_${name}_en`);
+  localStorage.removeItem(`sv_r_${name}_hi`);
+  localStorage.removeItem(`sv_r_${name}_ml`);
+  localStorage.removeItem(`sv_r_${name}_ta`);
+  localStorage.removeItem(`sv_r_${name}_yt`);
+  renderUserDropdown();
+}
+
+/* ================================================
+   SEARCH (movies)
+   ================================================ */
+function initSearch(lang) {
+  const inp = document.getElementById('srch-'+lang);
+  const box = document.getElementById('sug-'+lang);
+  inp.addEventListener('input', () => {
+    clearTimeout(timers[lang]);
+    const q = inp.value.trim();
+    if (q.length < 2) { box.innerHTML=''; return; }
+    timers[lang] = setTimeout(() => doSearch(q, lang), 350);
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest(`#srch-${lang}`) && !e.target.closest(`#sug-${lang}`)) box.innerHTML='';
+  });
+}
+
+async function doSearch(q, lang) {
+  const box = document.getElementById('sug-'+lang);
+  if (!TMDB_KEY) {
+    box.innerHTML='<div class="sug-item" style="color:#f07a7c;font-size:12px;">Add TMDB key in the banner above first.</div>';
+    return;
+  }
+  box.innerHTML='<div class="sug-item"><span class="spinner"></span><span style="font-size:12px;color:var(--muted);">Searching…</span></div>';
+  try {
+    const d = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json());
+    const items = (d.results||[]).filter(x=>x.media_type==='movie'||x.media_type==='tv').slice(0,9);
+    if (!items.length) { box.innerHTML='<div class="sug-item" style="color:var(--muted);font-size:12px;">No results.</div>'; return; }
+    box.innerHTML='';
+    items.forEach(item => {
+      const isM = item.media_type==='movie';
+      const title = item.title||item.name;
+      const year = (item.release_date||item.first_air_date||'').slice(0,4);
+      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
+      const el = document.createElement('div');
+      el.className='sug-item';
+      el.innerHTML=(poster?`<img class="sug-poster" src="${poster}" alt="" loading="lazy"/>`:
+        `<div class="sug-no-img">🎬</div>`)+
+        `<div class="sug-info"><div class="sug-title">${title}</div>
+        <div class="sug-meta">${year}${item.original_language?' · '+item.original_language.toUpperCase():''}</div></div>
+        <span class="sug-badge ${isM?'badge-movie':'badge-series'}">${isM?'Movie':'Series'}</span>`;
+      el.onclick = () => pickMovie(item, lang);
+      box.appendChild(el);
+    });
+  } catch(err) {
+    box.innerHTML='<div class="sug-item" style="color:#f07a7c;font-size:12px;">Error — check TMDB key.</div>';
+  }
+}
+
+async function pickMovie(item, lang) {
+  document.getElementById('sug-'+lang).innerHTML='';
+  const title = item.title||item.name;
+  document.getElementById('srch-'+lang).value = title;
+  let imdbId = '';
+  try {
+    const type = item.media_type==='movie'?'movie':'tv';
+    const ext = await fetch(`https://api.themoviedb.org/3/${type}/${item.id}/external_ids?api_key=${TMDB_KEY}`).then(r=>r.json());
+    imdbId = ext.imdb_id || '';
+  } catch(e){}
+  selMovie[lang] = {
+    title, tmdbId: String(item.id), imdbId, type:item.media_type,
+    year:(item.release_date||item.first_air_date||'').slice(0,4),
+    poster:item.poster_path?`https://image.tmdb.org/t/p/w185${item.poster_path}`:'',
+    rating:item.vote_average?item.vote_average.toFixed(1):'',
+    origLang:item.original_language||''
+  };
+  document.getElementById('sc-'+lang).classList.toggle('on', item.media_type==='tv');
+}
+
+/* ================================================
+   PLAY MOVIE
+   ================================================ */
+function playMovie(lang) {
+  const m = selMovie[lang];
+  if (!m) { alert('Search for and select a title first.'); return; }
+  const isTV = m.type==='tv';
+  const s = document.getElementById('s-'+lang).value||1;
+  const ep = document.getElementById('e-'+lang).value||1;
+
+  const src = buildSrc(lang, m, isTV, s, ep);
+  document.getElementById('vf-'+lang).src = src;
+  document.getElementById('po-'+lang).classList.add('on');
+
+  const langLabels = {en:'English',hi:'Hindi',ml:'Malayalam',ta:'Tamil'};
+  document.getElementById('nb-'+lang).classList.add('on');
+  document.getElementById('npi-'+lang).src = m.poster||'';
+  document.getElementById('npi-'+lang).style.display = m.poster?'block':'none';
+  document.getElementById('npt-'+lang).textContent = m.title;
+  document.getElementById('npm-'+lang).innerHTML =
+    `<span class="np-pill ${isTV?'pill-series':'pill-movie'}">${isTV?'Series':'Movie'}</span>`+
+    `<span style="color:var(--muted);font-size:11px;">${langLabels[lang]}</span>`+
+    ` ${m.year||''}${isTV?` &nbsp;·&nbsp; S${s} E${ep}`:''}`;
+  document.getElementById('nps-'+lang).innerHTML = m.rating?`⭐ ${m.rating}`:'';
+
+  addRecent(lang, { ...m, epInfo: isTV?{s,ep}:null });
+  setTimeout(()=>document.getElementById('po-'+lang).scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+
+function changeServer(lang) {
+  const m = selMovie[lang];
+  if (!m) return;
+  const isTV = m.type==='tv';
+  const s = document.getElementById('s-'+lang).value||1;
+  const ep = document.getElementById('e-'+lang).value||1;
+  document.getElementById('vf-'+lang).src = buildSrc(lang, m, isTV, s, ep);
+}
+
+/* ================================================
+   EINTHUSAN → SAVETHEVIDEO HELPER
+   ================================================ */
+function openSaveTheVideo(lang) {
+  const url = document.getElementById('ein-url-'+lang).value.trim();
+  if (!url) { alert('Paste an Einthusan movie URL first.'); return; }
+  window.open(`https://www.savethevideo.com/home?url=${encodeURIComponent(url)}`, '_blank');
+}
+
+/* ================================================
+   VIEW MODES & FULLSCREEN
+   ================================================ */
+function setView(lang, mode, btn) {
+  const ps = document.getElementById('ps-'+lang);
+  ps.className = 'player-stage '+mode;
+  btn.closest('.view-btns').querySelectorAll('.vbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function fsPlayer(lang) {
+  const iframe = document.getElementById('vf-'+lang);
+  if (iframe.requestFullscreen) iframe.requestFullscreen();
+  else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+}
+
+/* ================================================
+   YOUTUBE — inline search + play
+   ================================================ */
+function initYTSearch() {
+  const inp = document.getElementById('yt-url');
+  const box = document.getElementById('sug-yt');
+  inp.addEventListener('input', () => {
+    clearTimeout(timers.yt);
+    const q = inp.value.trim();
+    if (!q || q.startsWith('http') || q.includes('youtu')) { box.innerHTML=''; return; }
+    timers.yt = setTimeout(() => ytSearch(q), 400);
+  });
+  inp.addEventListener('keydown', e => { if(e.key==='Enter') loadYT(); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#yt-url') && !e.target.closest('#sug-yt')) box.innerHTML='';
+  });
+}
+
+function extractYtId(url) {
+  const m = url.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function ytSearch(q) {
+  const box = document.getElementById('sug-yt');
+  box.innerHTML='<div class="sug-item"><span class="spinner"></span><span style="font-size:12px;color:var(--muted);">Searching YouTube…</span></div>';
+  const instances = [
+    'https://inv.nadeko.net',
+    'https://invidious.privacydev.net',
+    'https://iv.melmac.space'
+  ];
+  let results = null;
+  for (const inst of instances) {
+    try {
+      const data = await fetch(`${inst}/api/v1/search?q=${encodeURIComponent(q)}&type=video&fields=videoId,title,author,publishedText,viewCount,lengthSeconds,videoThumbnails`, {signal: AbortSignal.timeout(4000)}).then(r=>r.json());
+      if (Array.isArray(data) && data.length) { results = data.slice(0,8); break; }
+    } catch(e){}
+  }
+  if (!results) {
+    box.innerHTML=`<div class="sug-item" style="color:var(--muted);font-size:12px;">Couldn't reach search — paste a YouTube URL directly above and hit Load.</div>`;
+    return;
+  }
+  box.innerHTML='';
+  results.forEach(v => {
+    const thumb = v.videoThumbnails?.find(t=>t.quality==='medium')?.url ||
+                  v.videoThumbnails?.[0]?.url ||
+                  `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`;
+    const duration = v.lengthSeconds ? fmtSeconds(v.lengthSeconds) : '';
+    const el = document.createElement('div');
+    el.className='sug-item';
+    el.innerHTML=`<img class="sug-thumb" src="${thumb}" alt="" loading="lazy" onerror="this.style.display='none'" />
+      <div class="sug-info">
+        <div class="sug-title">${escHtml(v.title)}</div>
+        <div class="sug-meta">${escHtml(v.author||'')}${duration?' · '+duration:''}</div>
+      </div>
+      <span class="sug-badge badge-yt">YT</span>`;
+    el.onclick = () => playYtVideo(v.videoId, v.title, v.author, thumb);
+    box.appendChild(el);
+  });
+}
+
+function fmtSeconds(s) {
+  const m = Math.floor(s/60), sec = s%60;
+  return m+':'+(sec<10?'0':'')+sec;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function playYtVideo(vid, title, author, thumb) {
+  document.getElementById('sug-yt').innerHTML='';
+  document.getElementById('yt-url').value = `https://www.youtube.com/watch?v=${vid}`;
+  currentYtId = vid;
+  const embedSrc = `https://www.youtube.com/embed/${vid}?autoplay=1&rel=0`;
+  document.getElementById('vf-yt').src = embedSrc;
+  document.getElementById('po-yt').classList.add('on');
+  const safeTitle = title || ('YouTube Video — '+vid);
+  document.getElementById('nb-yt').classList.add('on');
+  document.getElementById('npi-yt').src = thumb || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+  document.getElementById('npt-yt').textContent = safeTitle;
+  document.getElementById('npm-yt').textContent = author || vid;
+  showConverter(vid, thumb || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`, safeTitle);
+  addRecent('yt', {
+    title: safeTitle, tmdbId:vid, imdbId:vid, type:'yt',
+    poster: thumb || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
+    year:'', rating:'', origLang:'', ytId:vid
+  });
+  setTimeout(()=>document.getElementById('po-yt').scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+
+function loadYT() {
+  const val = document.getElementById('yt-url').value.trim();
+  document.getElementById('sug-yt').innerHTML='';
+  if (!val) return;
+  if (!val.startsWith('http') && !val.includes('youtu')) { ytSearch(val); return; }
+  const vid = extractYtId(val);
+  if (!vid) { alert('Could not detect a YouTube video ID from that URL.'); return; }
+  const thumb = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+  playYtVideo(vid, 'YouTube Video — '+vid, vid, thumb);
+}
+
+/* ================================================
+   MP3 / MP4 CONVERTER
+   ================================================ */
+function showConverter(vid, thumb, title) {
+  const sec = document.getElementById('conv-sec');
+  sec.style.display = 'block';
+  document.getElementById('conv-thumb').src = thumb;
+  document.getElementById('conv-title').textContent = title || ('YouTube Video — '+vid);
+  document.getElementById('conv-meta').textContent = 'Click a button below to convert & download';
+  const ytUrl = `https://www.youtube.com/watch?v=${vid}`;
+  document.getElementById('conv-yout-btn').href = `https://yout.pw/?url=${encodeURIComponent(ytUrl)}`;
+}
+
+/* ================================================
+   RECENTLY WATCHED
+   ================================================ */
+function rKey(lang) { return `sv_r_${currentUser}_${lang}`; }
+function getR(lang) { try { return JSON.parse(localStorage.getItem(rKey(lang))||'[]'); } catch { return []; } }
+function setR(lang, a) { localStorage.setItem(rKey(lang), JSON.stringify(a)); }
+
+function addRecent(lang, movie) {
+  let a = getR(lang).filter(x=>!(x.imdbId===movie.imdbId && x.tmdbId===movie.tmdbId));
+  a.unshift({...movie, ts:Date.now()});
+  if(a.length>24) a=a.slice(0,24);
+  setR(lang, a);
+  renderRecent(lang);
+}
+
+function renderAllRecents() {
+  ['en','hi','ml','ta','yt'].forEach(renderRecent);
+}
+
+function renderRecent(lang) {
+  const a = getR(lang);
+  const grid = document.getElementById('recent-grid-'+lang);
+  const empty = document.getElementById('no-recent-'+lang);
+  if (!a.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = a.map((m,i) => {
+    const isYt = lang==='yt';
+    return `<div class="rc" onclick="replayR('${lang}',${i})">
+      <img src="${m.poster||''}" alt="${escHtml(m.title)}"
+        onerror="this.style.background='var(--surface2)';this.src=''"
+        style="width:100%;${isYt?'aspect-ratio:16/9':'aspect-ratio:2/3'};object-fit:cover;display:block;" />
+      <div class="rc-info">
+        <div class="rc-title">${escHtml(m.title)}</div>
+        <div class="rc-meta">${m.year||''}</div>
+      </div>
+      <button class="rc-rm" onclick="rmR(event,'${lang}',${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function replayR(lang, idx) {
+  const m = getR(lang)[idx]; if(!m) return;
+  if (lang==='yt') {
+    switchTab('yt');
+    const thumb = m.poster || `https://img.youtube.com/vi/${m.ytId||m.tmdbId}/hqdefault.jpg`;
+    playYtVideo(m.ytId||m.tmdbId, m.title, '', thumb);
+  } else {
+    selMovie[lang] = m;
+    document.getElementById('srch-'+lang).value = m.title;
+    if (m.type==='tv' && m.epInfo) {
+      document.getElementById('sc-'+lang).classList.add('on');
+      document.getElementById('s-'+lang).value = m.epInfo.s;
+      document.getElementById('e-'+lang).value = m.epInfo.ep;
+    }
+    switchTab(lang);
+    playMovie(lang);
+  }
+}
+
+function rmR(e, lang, idx) {
+  e.stopPropagation();
+  const a = getR(lang); a.splice(idx,1); setR(lang,a); renderRecent(lang);
+}
+
+function clearRecent(lang) {
+  if(confirm('Clear all recently watched for this tab?')) { setR(lang,[]); renderRecent(lang); }
+}
+</script>
+</body>
+</html>
