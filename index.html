@@ -618,7 +618,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.
       </p>
       <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-ml" href="https://einthusan.tv/movie/results/?lang=malayalam" target="_blank">🌐 Search on Einthusan</a>
+        <a class="ein-browse-btn" id="ein-browse-ml" href="https://einthusan.tv/movie/results/?find=Popularity&lang=malayalam&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
       </div>
       <div class="ein-helper-row" style="margin-top:12px;">
         <input type="text" id="ein-url-ml" placeholder="https://einthusan.tv/movie/watch/…" />
@@ -707,7 +707,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.
       </p>
       <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-hi" href="https://einthusan.tv/movie/results/?lang=hindi" target="_blank">🌐 Search on Einthusan</a>
+        <a class="ein-browse-btn" id="ein-browse-hi" href="https://einthusan.tv/movie/results/?find=Popularity&lang=hindi&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
       </div>
       <div class="ein-helper-row" style="margin-top:12px;">
         <input type="text" id="ein-url-hi" placeholder="https://einthusan.tv/movie/watch/…" />
@@ -796,7 +796,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.
       </p>
       <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-ta" href="https://einthusan.tv/movie/results/?lang=tamil" target="_blank">🌐 Search on Einthusan</a>
+        <a class="ein-browse-btn" id="ein-browse-ta" href="https://einthusan.tv/movie/results/?find=Popularity&lang=tamil&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
       </div>
       <div class="ein-helper-row" style="margin-top:12px;">
         <input type="text" id="ein-url-ta" placeholder="https://einthusan.tv/movie/watch/…" />
@@ -1359,20 +1359,6 @@ async function pickMovie(item, lang) {
   };
   document.getElementById('sc-'+lang).classList.toggle('on', item.media_type==='tv');
   updateEinthusan(lang, title);
-}
-
-/* Update Einthusan browse button to search for the selected movie title */
-function updateEinthusan(lang, title) {
-  const btn = document.getElementById('ein-browse-'+lang);
-  const note = document.getElementById('ein-note-'+lang);
-  if (!btn) return;
-  const langMap = { ml:'malayalam', hi:'hindi', ta:'tamil' };
-  const eintLang = langMap[lang];
-  if (!eintLang) return;
-  const searchUrl = 'https://einthusan.tv/movie/results/?lang='+eintLang+'&query='+encodeURIComponent(title);
-  btn.href = searchUrl;
-  btn.textContent = '🌐 Search "'+title+'" on Einthusan';
-  if (note) note.textContent = 'Will search for "'+title+'" on Einthusan. Find the right result, copy its URL, and paste below to download.';
 }
 
 /* ================================================
