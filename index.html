@@ -863,9 +863,10 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <div class="conv-meta" id="conv-meta">Click a button below to convert &amp; download</div>
         </div>
       </div>
-      <div class="conv-actions">
-        <a class="conv-btn primary" id="conv-yout-btn" href="#" target="_blank">⬇ Download on yout.pw</a>
-      </div>
+<div class="conv-actions">
+  <a class="conv-btn primary" id="conv-yout-btn" href="#" target="_blank">⬇ Download on yout.pw</a>
+  <button class="conv-btn" id="conv-copy-btn" onclick="copyYtLink()">🔗 Copy YouTube Link</button>
+</div>
     </div>
   </div>
 
@@ -974,6 +975,16 @@ function getActiveSrvs(lang) {
   return getSrvConfig(lang).filter(s => !s.hidden);
 }
 
+function copyYtLink() {
+  if (!currentYtId) return;
+  const url = `https://www.youtube.com/watch?v=${currentYtId}`;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('conv-copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '🔗 Copy YouTube Link', 2000);
+  });
+}
+  
 function buildUrlFromConfig(srv, m, isTV, s, ep) {
   const useId = srv.tmdb ? m.tmdbId : (m.imdbId || m.tmdbId);
   if (srv.custom && srv.movieTpl) {
