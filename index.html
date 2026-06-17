@@ -585,6 +585,12 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .fixed-source-btn.primary{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:transparent;color:#09090e;font-weight:700;}
 @media(max-width:640px){.fixed-source-btn{padding:7px 10px;font-size:11px}.single-user{width:100%;justify-content:flex-start;flex-wrap:wrap}}
 
+
+.master-sync-message{display:none;width:100%;margin-top:8px;font-size:12px;line-height:1.45;padding:8px 11px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);}
+.master-sync-message.on{display:block;}
+.master-sync-message.ok{color:#4caf82;border-color:rgba(76,175,130,.35);background:rgba(76,175,130,.08);}
+.master-sync-message.bad{color:#f07a7c;border-color:rgba(240,122,124,.35);background:rgba(240,122,124,.08);}
+.master-sync-message.work{color:var(--gold);border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.08);}
 #cloud-sync-box{display:none!important;}
 
 </style>
@@ -600,8 +606,9 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <span class="fixed-sync-dot" id="header-sync-dot"></span>
       <span id="header-sync-text">Sync 0530</span>
     </div>
-    <button class="fixed-source-btn primary" onclick="makeThisDeviceSourceOfTruth(event)">⬆ Make this device master</button>
-    <button class="fixed-source-btn" onclick="replaceThisDeviceFromCloud(event)">⬇ Load master data</button>
+    <button class="fixed-source-btn primary" id="make-master-btn" onclick="makeThisDeviceSourceOfTruth(event)">⬆ Make this device master</button>
+    <button class="fixed-source-btn" id="load-master-btn" onclick="replaceThisDeviceFromCloud(event)">⬇ Load master data</button>
+    <div class="master-sync-message" id="master-sync-message">Ready.</div>
   </div>
 </div>
 
@@ -1779,15 +1786,62 @@ window.saveCloudSyncSettings=saveCloudSyncSettings;
 window.clearCloudSyncSettings=clearCloudSyncSettings;
 window.syncNow=syncNow;
 
+
+function showMasterSyncMessage(kind, msg){
+  const cls = kind==='ok' ? 'ok' : kind==='bad' ? 'bad' : 'work';
+  ['master-sync-message','settings-master-sync-message'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.className='master-sync-message on '+cls; el.textContent=msg; }
+  });
+}
+function setMasterButtonsBusy(isBusy){
+  ['make-master-btn','load-master-btn'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){ b.disabled=!!isBusy; b.style.opacity=isBusy?'.6':''; b.style.cursor=isBusy?'wait':''; }
+  });
+}
+function refreshAllMovieViews(){
+  for(const lang of ['en','hi','ta','yt']){
+    try{ renderRecent(lang); }catch(e){}
+    try{ renderContinueWatching(lang); }catch(e){}
+    try{ renderWatchlist(lang); }catch(e){}
+  }
+  try{ if(typeof renderPremiumHome==='function') renderPremiumHome(); }catch(e){}
+}
+function countMasterDataSnapshot(){
+  const langs=['en','hi','ta','yt'];
+  let recent=0, watch=0;
+  langs.forEach(lang=>{ recent += (getR(lang)||[]).length; if(lang!=='yt') watch += (getW(lang)||[]).length; });
+  return {recent, watch};
+}
+function stableJson(v){
+  return JSON.stringify(v ?? null);
+}
+async function cloudSetVerified(key, val){
+  await cloudSet(key, val);
+  const back = await cloudGet(key);
+  if(stableJson(back) !== stableJson(val)){
+    throw new Error('Cloud verification failed for '+key);
+  }
+  return back;
+}
+async function cloudGetRequired(key){
+  const val = await cloudGet(key);
+  if(val === null || typeof val === 'undefined') throw new Error('Cloud read returned empty for '+key);
+  return val;
+}
+
 async function makeThisDeviceSourceOfTruth(e){
   e?.stopPropagation?.();
-  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); showMasterSyncMessage('bad','✕ Firebase URL is missing in the code.'); alert('Firebase URL is missing in the code.'); return; }
   if(!confirm('This will overwrite the 0530 cloud sync with THIS device data. Use this on your laptop if your laptop has the correct movies. Continue?')) return;
+  setMasterButtonsBusy(true);
   updateHeaderSyncStatus('syncing');
+  showMasterSyncMessage('work','Uploading laptop/source data to cloud room 0530…');
   try{
     for(const lang of ['en','hi','ta','yt']){
-      await cloudSet(syncKey(lang), getR(lang));
-      if(lang !== 'yt') await cloudSet(watchSyncKey(lang), getW(lang));
+      await cloudSetVerified(syncKey(lang), getR(lang));
+      if(lang !== 'yt') await cloudSetVerified(watchSyncKey(lang), getW(lang));
     }
     // Also upload every saved timestamp from this device.
     const tsPrefix = `sv_ts_${currentUser}_`;
@@ -1798,40 +1852,57 @@ async function makeThisDeviceSourceOfTruth(e){
         const parts = k.split('_');
         const lang = parts[3];
         const tmdbId = parts.slice(4).join('_');
-        if(lang && tmdbId) await cloudSet(tsCloudKey(tmdbId, lang), JSON.parse(localStorage.getItem(k)));
+        const val = JSON.parse(localStorage.getItem(k));
+        if(lang && tmdbId) await cloudSetVerified(tsCloudKey(tmdbId, lang), val);
       }catch(err){}
     }
-    for(const lang of ['en','hi','ta','yt']){ renderRecent(lang); renderContinueWatching(lang); renderWatchlist(lang); }
+    refreshAllMovieViews();
+    const c=countMasterDataSnapshot();
     updateHeaderSyncStatus('synced');
-    alert('✓ Laptop/source data uploaded to sync room 0530. Now open the phone and tap Load master data.');
+    showMasterSyncMessage('ok',`✓ Master upload verified. Cloud room 0530 now has ${c.recent} recent items and ${c.watch} watchlist items from this device.`);
+    alert(`✓ Master upload verified. Cloud room 0530 now has ${c.recent} recent items and ${c.watch} watchlist items. Now open the phone and tap Load master data.`);
   }catch(err){
     console.warn('[Cloud Sync] source upload failed', err);
     updateHeaderSyncStatus('error');
-    alert('Upload failed. Check Firebase rules/internet connection.');
+    showMasterSyncMessage('bad','✕ Master upload failed or could not be verified. Check Firebase rules/internet, then try again.');
+    alert('Upload failed or could not be verified. Check Firebase rules/internet connection.');
+  }finally{
+    setMasterButtonsBusy(false);
   }
 }
 
 async function replaceThisDeviceFromCloud(e){
   e?.stopPropagation?.();
-  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); showMasterSyncMessage('bad','✕ Firebase URL is missing in the code.'); alert('Firebase URL is missing in the code.'); return; }
   if(!confirm('This will replace THIS device local movies/watchlists with the master cloud data from 0530. Continue?')) return;
+  setMasterButtonsBusy(true);
   updateHeaderSyncStatus('syncing');
+  showMasterSyncMessage('work','Loading verified master data from cloud room 0530…');
   try{
+    let totalRecent=0, totalWatch=0;
     for(const lang of ['en','hi','ta','yt']){
-      const recent = await cloudGet(syncKey(lang));
-      setRLocal(lang, Array.isArray(recent) ? recent : []);
+      const recent = await cloudGetRequired(syncKey(lang));
+      if(!Array.isArray(recent)) throw new Error('Cloud recent data is not an array for '+lang);
+      setRLocal(lang, recent);
+      totalRecent += recent.length;
       if(lang !== 'yt'){
-        const watch = await cloudGet(watchSyncKey(lang));
-        setWLocal(lang, Array.isArray(watch) ? watch : []);
+        const watch = await cloudGetRequired(watchSyncKey(lang));
+        if(!Array.isArray(watch)) throw new Error('Cloud watchlist data is not an array for '+lang);
+        setWLocal(lang, watch);
+        totalWatch += watch.length;
       }
     }
-    for(const lang of ['en','hi','ta','yt']){ renderRecent(lang); renderContinueWatching(lang); renderWatchlist(lang); }
+    refreshAllMovieViews();
     updateHeaderSyncStatus('synced');
-    alert('✓ This device now matches the 0530 master data.');
+    showMasterSyncMessage('ok',`✓ Master data loaded. This device now has ${totalRecent} recent items and ${totalWatch} watchlist items from room 0530.`);
+    alert(`✓ Master data loaded. This device now has ${totalRecent} recent items and ${totalWatch} watchlist items from room 0530.`);
   }catch(err){
     console.warn('[Cloud Sync] source download failed', err);
     updateHeaderSyncStatus('error');
-    alert('Download failed. Check Firebase rules/internet connection.');
+    showMasterSyncMessage('bad','✕ Load failed. The phone did not replace its data because the cloud read could not be verified.');
+    alert('Download failed or could not be verified. Check Firebase rules/internet connection.');
+  }finally{
+    setMasterButtonsBusy(false);
   }
 }
 
@@ -2382,7 +2453,7 @@ if ('caches' in window) {
   const oldPickMovie = window.pickMovie;
   const oldDoSearch = window.doSearch;
 
-  function labelFor(lang){ return lang==='ta'?'Malayalam / Tamil':lang==='hi'?'Hindi':lang==='en'?'English':lang==='yt'?'YouTube':'Movies'; }
+  function labelFor(lang){ return lang==='ta'?'Malayalam / Hindi / Tamil':lang==='hi'?'Hindi':lang==='en'?'English':lang==='yt'?'YouTube':'Movies'; }
   function safePoster(m){ return m?.poster || ''; }
   function safeText(s){ return (window.escHtml ? escHtml(String(s||'')) : String(s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))); }
 
@@ -2427,7 +2498,7 @@ if ('caches' in window) {
         <div class="premium-sub">Advanced tools live here so the main watching page stays clean.</div>
       </section>
       <div class="settings-grid">
-        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Sync room is fixed to 0530. Use the master buttons when one device has the correct movies and the other device is different.</p><div class="settings-actions"><button onclick="makeThisDeviceSourceOfTruth(event)">Make this device master</button><button onclick="replaceThisDeviceFromCloud(event)">Load master data</button><button onclick="syncNow(event)">Normal Sync</button></div><div id="settings-sync-slot"></div></div>
+        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Sync room is fixed to 0530. Use the master buttons when one device has the correct movies and the other device is different.</p><div class="settings-actions"><button onclick="makeThisDeviceSourceOfTruth(event)">Make this device master</button><button onclick="replaceThisDeviceFromCloud(event)">Load master data</button><button onclick="syncNow(event)">Normal Sync</button></div><div id="settings-master-sync-message" class="master-sync-message">Ready.</div><div id="settings-sync-slot"></div></div>
         <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
         <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
         <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
@@ -2514,6 +2585,8 @@ if ('caches' in window) {
       recent.innerHTML = combined.length ? `<div class="premium-mini-grid">${combined.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>` : `<div class="premium-empty">Recently watched items from every language will appear here.</div>`;
     }
   }
+
+  window.renderPremiumHome = renderPremiumHome;
 
   function renderPremiumDetail(lang, movie, rawItem){
     const box=document.getElementById('premium-detail-'+lang); if(!box || !movie) return;
