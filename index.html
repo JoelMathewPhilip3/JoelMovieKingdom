@@ -565,6 +565,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   z-index:50!important;
 }
 
+
+/* SEARCH DROPDOWN HOTFIX */
+.srch-wrap{position:relative!important;z-index:9999!important;}
+#sug-en,#sug-hi,#sug-ta,#sug-yt{display:block;position:absolute!important;z-index:99999!important;box-shadow:0 18px 50px rgba(0,0,0,.75);}
+.sug-actions{pointer-events:none;}
+.sug-item{position:relative;z-index:1;}
+
 </style>
 </head>
 <body>
@@ -1489,11 +1496,9 @@ async function doSearch(q,lang){
         `<div class="sug-info"><div class="sug-title">${escHtml(title)}</div>
         <div class="sug-meta">${escHtml(year)}${item.original_language?' · '+escHtml(item.original_language.toUpperCase()):''}</div></div>
         <div class="sug-actions">
-          <button type="button" class="sug-add-watch">＋ Watchlist</button>
           <span class="sug-badge ${isM?'badge-movie':'badge-series'}">${isM?'Movie':'Series'}</span>
         </div>`;
       el.onclick=()=>pickMovie(item,lang);
-      el.querySelector('.sug-add-watch').onclick=(e)=>addSearchItemToWatchlist(e,item,lang);
       box.appendChild(el);
     });
   } catch(err){
@@ -2603,7 +2608,7 @@ if ('caches' in window) {
     const box = document.getElementById('sug-' + lang);
     if (!box) return;
 
-    const key = (window.TMDB_KEY || '').trim();
+    const key = (typeof TMDB_KEY !== 'undefined' ? String(TMDB_KEY || '') : String(window.TMDB_KEY || '')).trim();
     if (!key) {
       showSearchMessage(lang, 'TMDB key missing inside code.', '#f07a7c');
       return;
@@ -2646,16 +2651,10 @@ if ('caches' in window) {
             <div class="sug-meta">${htmlEscape(year)}${item.original_language ? ' · ' + htmlEscape(item.original_language.toUpperCase()) : ''}</div>
           </div>
           <div class="sug-actions">
-            <button type="button" class="sug-add-watch">＋ Watchlist</button>
             <span class="sug-badge ${isMovie ? 'badge-movie' : 'badge-series'}">${isMovie ? 'Movie' : 'Series'}</span>
           </div>`;
 
         row.addEventListener('click', () => window.pickMovie && window.pickMovie(item, lang));
-        const addBtn = row.querySelector('.sug-add-watch');
-        addBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          if (window.addSearchItemToWatchlist) window.addSearchItemToWatchlist(e, item, lang);
-        });
         box.appendChild(row);
       });
     } catch (err) {
