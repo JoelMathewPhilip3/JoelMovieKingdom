@@ -2522,14 +2522,8 @@ if ('caches' in window) {
       <div id="movie-host"></div>`);
 
     const settings=createTab('tab-settings', `
-      <section class="premium-hero" style="padding:22px;">
-        <div class="premium-kicker">Settings</div>
-        <div class="premium-title" style="font-size:2rem;">Clean, synced, and simple</div>
-        <div class="premium-sub">Advanced tools live here so the main watching page stays clean.</div>
-      </section>
       <div class="settings-grid">
-        <div class="settings-card"><h3>Server Tools</h3><p>Check server availability and refresh the server buttons.</p><div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div></div>
-        <div class="settings-card"><h3>Advanced Tools</h3><p>Show or hide the extra server controls and helper tools.</p><div class="settings-actions"><button id="advanced-tools-btn" class="advanced-toggle-btn hiding" onclick="toggleAdvancedTools()">Advanced tools: hiding</button></div></div>
+        <div class="settings-card"><h3>Server Tools</h3><p>Add back any missing built-in servers and refresh the server buttons.</p><div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div></div>
       </div>`);
 
     const host=document.getElementById('movie-host');
@@ -2685,15 +2679,9 @@ if ('caches' in window) {
   };
 
   function applyPremiumCleanMode(){
-    const on=localStorage.getItem('premium_clean_mode')==='on';
-    const risky=new Set(['vidsrcme','vidsrcsu','2embed','vsembed','multiembed']);
-    MOVIE_LANGS.forEach(lang=>{
-      try{
-        const cfg=getSrvConfig(lang);
-        cfg.forEach(s=>{ if(risky.has(s.key)) s.hidden=on; });
-        setSrvConfig(lang,cfg); renderSrvPills(lang); renderSrvList(lang);
-      }catch(e){}
-    });
+    // Clean mode removed by request. Keep this as a no-op so older saved settings
+    // do not keep hiding servers after the Settings cleanup.
+    localStorage.setItem('premium_clean_mode','off');
   }
   function updateCleanModeLabel(){
     const on=localStorage.getItem('premium_clean_mode')==='on';
@@ -2720,16 +2708,43 @@ if ('caches' in window) {
 
   window.findNewServers=async function(){
     const btn=document.getElementById('find-servers-btn');
-    const old=btn ? btn.textContent : '';
-    if(btn){ btn.textContent='Checking…'; btn.disabled=true; }
+    const old=btn ? btn.textContent : 'Find new servers';
+    if(btn){ btn.textContent='Finding…'; btn.disabled=true; }
+    let added=0, restored=0;
     try{
+      MOVIE_LANGS.forEach(lang=>{
+        const cfg=getSrvConfig(lang);
+        const byKey=new Map(cfg.map(s=>[s.key,s]));
+        buildDefaultSrvConfig().forEach(def=>{
+          const existing=byKey.get(def.key);
+          if(!existing){
+            cfg.push(def);
+            added++;
+          }else if(existing.hidden){
+            existing.hidden=false;
+            restored++;
+          }
+        });
+        setSrvConfig(lang,cfg);
+        if(!activeServer[lang] || !getActiveSrvs(lang).find(s=>s.key===activeServer[lang])){
+          activeServer[lang]=getActiveSrvs(lang)[0]?.key || null;
+        }
+        renderSrvPills(lang);
+        renderSrvList(lang);
+      });
       await Promise.all(MOVIE_LANGS.map(lang=>testAllServers(lang)));
-      if(btn) btn.textContent='Servers checked ✓';
+      if(btn){
+        btn.textContent = added
+          ? `Added ${added} server${added===1?'':'s'} ✓`
+          : restored
+            ? `Restored ${restored} server${restored===1?'':'s'} ✓`
+            : 'No new servers found';
+      }
     }catch(e){
       console.error('[Find servers failed]', e);
-      if(btn) btn.textContent='Server check failed';
+      if(btn) btn.textContent='Server find failed';
     }finally{
-      setTimeout(()=>{ if(btn){ btn.textContent=old || 'Find new servers'; btn.disabled=false; } }, 1400);
+      setTimeout(()=>{ if(btn){ btn.textContent=old; btn.disabled=false; } }, 1800);
     }
   };
 
@@ -2894,6 +2909,13 @@ if ('caches' in window) {
   }
   function safeJsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value ?? [])); }
 
+  function setMasterDropdownText(text){
+    const sel = document.getElementById('device-master-select');
+    if(!sel) return;
+    const first = sel.querySelector('option[value=""]') || sel.options[0];
+    if(first) first.textContent = text || 'Device master';
+    sel.value = '';
+  }
   function status(kind, message){
     // Visual sync/status box removed by request.
     console.log(message || (kind === 'ok' ? 'Master worked' : kind === 'bad' ? 'Master not worked' : 'Working'));
@@ -2959,6 +2981,7 @@ if ('caches' in window) {
     if(e){ e.preventDefault(); e.stopPropagation(); }
     busy(true);
     status('work','Master upload working…');
+    let ok = false;
     try{
       const snap = getLocalSnapshot();
       const c = countSnapshot(snap);
@@ -2966,41 +2989,53 @@ if ('caches' in window) {
       const verify = await getCloud(MASTER_KEY);
       const vc = countSnapshot(verify);
       if(vc.recent !== c.recent || vc.watch !== c.watch) throw new Error('Firebase verification count mismatch.');
+      ok = true;
       status('ok', 'Master upload worked.');
     }catch(err){
       console.error('[Master Sync Upload Failed]', err);
       status('bad', 'Master upload not worked.');
     }finally{ busy(false); }
+    return ok;
   };
 
   window.replaceThisDeviceFromCloud = async function(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
     busy(true);
     status('work','Load working…');
+    let ok = false;
     try{
       const snap = await getCloud(MASTER_KEY);
       if(!snap) throw new Error('No master snapshot found yet. Upload from laptop first.');
       applySnapshotToThisDevice(snap);
       refreshUI();
       const c = countSnapshot(snap);
+      ok = true;
       status('ok', 'Load worked.');
     }catch(err){
       console.error('[Master Sync Download Failed]', err);
       status('bad', 'Load not worked.');
     }finally{ busy(false); }
+    return ok;
   };
 
   window.handleMasterDropdown = async function(sel,e){
     const val = sel?.value || '';
     if(!val) return;
-    if(val === 'upload') await window.makeThisDeviceSourceOfTruth(e);
-    if(val === 'load') await window.replaceThisDeviceFromCloud(e);
-    if(sel) sel.value = '';
+    let ok = false;
+    if(val === 'upload'){
+      setMasterDropdownText('Master working…');
+      ok = await window.makeThisDeviceSourceOfTruth(e);
+      setMasterDropdownText(ok ? 'Master worked' : 'Master not worked');
+    }
+    if(val === 'load'){
+      setMasterDropdownText('Load working…');
+      ok = await window.replaceThisDeviceFromCloud(e);
+      setMasterDropdownText(ok ? 'Load worked' : 'Load not worked');
+    }
   };
 
   function wireButtons(){
-    const sel = document.getElementById('device-master-select');
-    if(sel) sel.value = '';
+    setMasterDropdownText('Device master');
     status('work','Ready.');
   }
 
