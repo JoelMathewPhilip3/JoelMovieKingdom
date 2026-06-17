@@ -580,6 +580,11 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .fixed-sync-pill.error{color:#f07a7c;}
 .fixed-sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;}
 .fixed-sync-dot.anim{animation:pulse .8s ease-in-out infinite alternate;}
+.fixed-source-btn{background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.fixed-source-btn:hover{border-color:rgba(201,168,76,.45);color:var(--gold);}
+.fixed-source-btn.primary{background:linear-gradient(135deg,var(--gold3),var(--gold));border-color:transparent;color:#09090e;font-weight:700;}
+@media(max-width:640px){.fixed-source-btn{padding:7px 10px;font-size:11px}.single-user{width:100%;justify-content:flex-start;flex-wrap:wrap}}
+
 #cloud-sync-box{display:none!important;}
 
 </style>
@@ -595,6 +600,8 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <span class="fixed-sync-dot" id="header-sync-dot"></span>
       <span id="header-sync-text">Sync 0530</span>
     </div>
+    <button class="fixed-source-btn primary" onclick="makeThisDeviceSourceOfTruth(event)">⬆ Make this device master</button>
+    <button class="fixed-source-btn" onclick="replaceThisDeviceFromCloud(event)">⬇ Load master data</button>
   </div>
 </div>
 
@@ -1772,6 +1779,65 @@ window.saveCloudSyncSettings=saveCloudSyncSettings;
 window.clearCloudSyncSettings=clearCloudSyncSettings;
 window.syncNow=syncNow;
 
+async function makeThisDeviceSourceOfTruth(e){
+  e?.stopPropagation?.();
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  if(!confirm('This will overwrite the 0530 cloud sync with THIS device data. Use this on your laptop if your laptop has the correct movies. Continue?')) return;
+  updateHeaderSyncStatus('syncing');
+  try{
+    for(const lang of ['en','hi','ta','yt']){
+      await cloudSet(syncKey(lang), getR(lang));
+      if(lang !== 'yt') await cloudSet(watchSyncKey(lang), getW(lang));
+    }
+    // Also upload every saved timestamp from this device.
+    const tsPrefix = `sv_ts_${currentUser}_`;
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k || !k.startsWith(tsPrefix)) continue;
+      try{
+        const parts = k.split('_');
+        const lang = parts[3];
+        const tmdbId = parts.slice(4).join('_');
+        if(lang && tmdbId) await cloudSet(tsCloudKey(tmdbId, lang), JSON.parse(localStorage.getItem(k)));
+      }catch(err){}
+    }
+    for(const lang of ['en','hi','ta','yt']){ renderRecent(lang); renderContinueWatching(lang); renderWatchlist(lang); }
+    updateHeaderSyncStatus('synced');
+    alert('✓ Laptop/source data uploaded to sync room 0530. Now open the phone and tap Load master data.');
+  }catch(err){
+    console.warn('[Cloud Sync] source upload failed', err);
+    updateHeaderSyncStatus('error');
+    alert('Upload failed. Check Firebase rules/internet connection.');
+  }
+}
+
+async function replaceThisDeviceFromCloud(e){
+  e?.stopPropagation?.();
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  if(!confirm('This will replace THIS device local movies/watchlists with the master cloud data from 0530. Continue?')) return;
+  updateHeaderSyncStatus('syncing');
+  try{
+    for(const lang of ['en','hi','ta','yt']){
+      const recent = await cloudGet(syncKey(lang));
+      setRLocal(lang, Array.isArray(recent) ? recent : []);
+      if(lang !== 'yt'){
+        const watch = await cloudGet(watchSyncKey(lang));
+        setWLocal(lang, Array.isArray(watch) ? watch : []);
+      }
+    }
+    for(const lang of ['en','hi','ta','yt']){ renderRecent(lang); renderContinueWatching(lang); renderWatchlist(lang); }
+    updateHeaderSyncStatus('synced');
+    alert('✓ This device now matches the 0530 master data.');
+  }catch(err){
+    console.warn('[Cloud Sync] source download failed', err);
+    updateHeaderSyncStatus('error');
+    alert('Download failed. Check Firebase rules/internet connection.');
+  }
+}
+
+window.makeThisDeviceSourceOfTruth = makeThisDeviceSourceOfTruth;
+window.replaceThisDeviceFromCloud = replaceThisDeviceFromCloud;
+
 function syncKey(lang) { return `recent__${currentUser}__${lang}`; }
 
 function rKey(lang){return `sv_r_${currentUser}_${lang}`;}
@@ -2348,7 +2414,7 @@ if ('caches' in window) {
 
     const movies=createTab('tab-movies', `
       <div class="premium-lang-tabs" id="premium-lang-tabs">
-        <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Tamil</button>
+        <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Hindi / Tamil</button>
         <button data-lang="hi" onclick="selectPremiumMovieLang('hi')">Hindi</button>
         <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
       </div>
@@ -2361,7 +2427,7 @@ if ('caches' in window) {
         <div class="premium-sub">Advanced tools live here so the main watching page stays clean.</div>
       </section>
       <div class="settings-grid">
-        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Use the same Sync PIN on each device. Your Firebase URL is already inside the code.</p><div id="settings-sync-slot"></div></div>
+        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Sync room is fixed to 0530. Use the master buttons when one device has the correct movies and the other device is different.</p><div class="settings-actions"><button onclick="makeThisDeviceSourceOfTruth(event)">Make this device master</button><button onclick="replaceThisDeviceFromCloud(event)">Load master data</button><button onclick="syncNow(event)">Normal Sync</button></div><div id="settings-sync-slot"></div></div>
         <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
         <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
         <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
