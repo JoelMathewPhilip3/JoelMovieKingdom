@@ -463,13 +463,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .cloud-sync-ok{color:#4caf82;}
 .cloud-sync-bad{color:#f07a7c;}
 
-.cloud-sync-result{font-size:12px;line-height:1.55;margin-top:2px;display:none;}
-.cloud-sync-result.on{display:block;}
-.cloud-sync-result.ok{color:#4caf82;}
-.cloud-sync-result.bad{color:#f07a7c;}
-.cloud-sync-result.wait{color:var(--gold);}
-.cloud-sync-check{font-weight:700;margin-right:4px;}
-
 @media(max-width:640px){
   #cloud-sync-box{margin:10px 16px 0;}
   .cloud-sync-row input{min-width:100%;}
@@ -636,7 +629,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <button class="secondary" onclick="clearCloudSyncSettings(event)">Use Local Only</button>
     </div>
     <div class="cloud-sync-help" id="cloud-sync-help">Use the same Sync PIN on every device. Example: 1111 works, but a longer PIN like joel1111 is safer.</div>
-    <div class="cloud-sync-result" id="cloud-sync-result"></div>
   </div>
 </div>
 
@@ -1049,7 +1041,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 /* ================================================
    GLOBAL STATE
    ================================================ */
-let TMDB_KEY = localStorage.getItem('tmdb_key') || 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
+let TMDB_KEY = 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
 let currentUser = localStorage.getItem('sv_user') || 'Joel';
 let timers = {};
 let selMovie = { en:null, hi:null, ta:null };
@@ -1380,43 +1372,11 @@ function switchTab(t){
    API KEY
    ================================================ */
 function saveKey(){
-  const input = document.getElementById('api-key-input');
-  const v = input ? input.value.trim() : '';
+  const v=document.getElementById('api-key-input').value.trim();
   if(!v) return;
-  TMDB_KEY = v;
-  localStorage.setItem('tmdb_key', v);
-  const banner = document.getElementById('api-banner');
-  if (banner) banner.classList.add('hidden');
-  updateTmdbStatus('✅ TMDB key saved');
+  TMDB_KEY=v; localStorage.setItem('tmdb_key',v);
+  document.getElementById('api-banner').classList.add('hidden');
 }
-
-function updateTmdbStatus(msg){
-  const el = document.getElementById('tmdb-status');
-  if (!el) return;
-  const masked = TMDB_KEY ? (TMDB_KEY.slice(0,4) + '••••••••' + TMDB_KEY.slice(-4)) : 'Missing';
-  el.innerHTML = msg ? `${msg}<br><span style="color:var(--muted);">Current key: ${masked}</span>` : `✅ TMDB key loaded<br><span style="color:var(--muted);">Current key: ${masked}</span>`;
-}
-
-function showTmdbKeyBox(){
-  const box = document.getElementById('tmdb-key-box');
-  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  const input = document.getElementById('settings-tmdb-key');
-  if (input) input.value = TMDB_KEY || '';
-}
-
-function saveSettingsTmdbKey(){
-  const input = document.getElementById('settings-tmdb-key');
-  const v = input ? input.value.trim() : '';
-  if (!v) return updateTmdbStatus('❌ Paste a TMDB key first');
-  TMDB_KEY = v;
-  localStorage.setItem('tmdb_key', v);
-  updateTmdbStatus('✅ TMDB key saved');
-}
-
-window.saveKey = saveKey;
-window.updateTmdbStatus = updateTmdbStatus;
-window.showTmdbKeyBox = showTmdbKeyBox;
-window.saveSettingsTmdbKey = saveSettingsTmdbKey;
 
 /* ================================================
    USERS
@@ -1793,11 +1753,10 @@ function showConverter(vid,thumb,title){
 /* ================================================
    CLOUD SYNC
    ================================================ */
-// IMPORTANT: Replace this with YOUR real Firebase Realtime Database URL.
-// Example: const DEFAULT_CLOUD_URL = 'https://your-project-id-default-rtdb.firebaseio.com';
+// Paste your Firebase Realtime Database URL here after you create the Firebase project.
+// Example: const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
 const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
 const CLOUD_PIN_KEY = 'sv_cloud_pin';
-
 function getCloudUrl(){
   const url = String(DEFAULT_CLOUD_URL || '').trim();
   if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') return '';
@@ -1805,7 +1764,7 @@ function getCloudUrl(){
 }
 function getCloudPin(){ return (localStorage.getItem(CLOUD_PIN_KEY)||'').trim(); }
 function cloudReady(){ return !!(getCloudUrl() && getCloudPin()); }
-function sanitizeFirebaseKey(key){ return String(key).replace(/[.#$\[\]\/]g,'_'); }
+function sanitizeFirebaseKey(key){ return String(key).replace(/[.#$\[\]\/]/g,'_'); }
 function simpleHash(str){
   let h=2166136261;
   for(let i=0;i<String(str).length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
@@ -1815,45 +1774,24 @@ function cloudPath(key){
   const room = sanitizeFirebaseKey(simpleHash(getCloudPin()));
   return `${getCloudUrl()}/movieKingdom/${room}/${sanitizeFirebaseKey(key)}.json`;
 }
-function setCloudResult(type,msg){
-  const el=document.getElementById('cloud-sync-result');
-  if(!el) return;
-  el.className='cloud-sync-result on '+(type||'');
-  const icon = type==='ok' ? '✅' : type==='bad' ? '❌' : '⏳';
-  el.innerHTML=`<span class="cloud-sync-check">${icon}</span>${msg}`;
-}
-function syncErrorMessage(e){
-  const msg = String(e?.message || e || 'Cloud sync failed');
-  if(msg.includes('401') || msg.includes('403')) return 'Firebase blocked the request. Check Realtime Database rules/permissions.';
-  if(msg.includes('404')) return 'Firebase database not found. The URL in the code is probably not a real Realtime Database URL.';
-  if(msg.includes('Failed to fetch')) return 'Could not reach Firebase. Check internet, Firebase URL, and database rules.';
-  return msg;
-}
 async function cloudGet(key) {
   if(!cloudReady()) return null;
-  const r = await fetch(cloudPath(key), { method:'GET', cache:'no-store' });
-  if(!r.ok) throw new Error(`Cloud read failed (${r.status})`);
-  return await r.json();
+  try {
+    const r = await fetch(cloudPath(key), { method:'GET', cache:'no-store' });
+    if(!r.ok) throw new Error('Cloud read failed');
+    return await r.json();
+  } catch(e) { console.warn('[Cloud Sync] read failed', e); return null; }
 }
 async function cloudSet(key, val) {
-  if(!cloudReady()) return false;
-  const r = await fetch(cloudPath(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) });
-  if(!r.ok) throw new Error(`Cloud save failed (${r.status})`);
-  return true;
+  if(!cloudReady()) return;
+  try {
+    const r = await fetch(cloudPath(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) });
+    if(!r.ok) throw new Error('Cloud save failed');
+  } catch(e) { console.warn('[Cloud Sync] save failed', e); }
 }
 async function cloudDelete(key) {
-  if(!cloudReady()) return false;
-  const r = await fetch(cloudPath(key), { method:'DELETE' });
-  if(!r.ok) throw new Error(`Cloud delete failed (${r.status})`);
-  return true;
-}
-async function testCloudConnection(){
-  const key=`sync_test__${currentUser}`;
-  const stamp={ok:true,user:currentUser,t:Date.now()};
-  await cloudSet(key,stamp);
-  const check=await cloudGet(key);
-  if(!check || check.t!==stamp.t) throw new Error('Test write/read did not match.');
-  return true;
+  if(!cloudReady()) return;
+  try { await fetch(cloudPath(key), { method:'DELETE' }); } catch(e) { console.warn('[Cloud Sync] delete failed', e); }
 }
 function updateCloudSyncState(msg, cls='') {
   const state=document.getElementById('cloud-sync-state');
@@ -1863,62 +1801,37 @@ function updateCloudSyncState(msg, cls='') {
 }
 function refreshCloudSyncState(){
   const hasUrl=!!getCloudUrl();
-  updateCloudSyncState(cloudReady() ? `Cloud sync ready · user: ${currentUser}` : hasUrl ? 'Enter Sync PIN to turn on cloud sync' : 'Enter Sync PIN', cloudReady()?'cloud-sync-ok':hasUrl?'':'cloud-sync-bad');
+  updateCloudSyncState(cloudReady() ? `Cloud sync on · user: ${currentUser}` : hasUrl ? 'Enter Sync PIN to turn on cloud sync' : 'Enter Sync PIN', cloudReady()?'cloud-sync-ok':hasUrl?'':'cloud-sync-bad');
 }
 function toggleCloudSyncBox(){ document.getElementById('cloud-sync-box')?.classList.toggle('collapsed'); refreshCloudSyncState(); }
 async function saveCloudSyncSettings(e){
   e?.stopPropagation?.();
   const url=getCloudUrl();
   const pin=(document.getElementById('cloud-pin-input')?.value||'').trim();
-  if(!url){ alert('Firebase URL is missing in the code.'); setCloudResult('bad','Firebase URL is missing in the code.'); return; }
-  if(!pin){ alert('Enter a Sync PIN / room name. Use the same PIN on every device.'); setCloudResult('bad','Enter a Sync PIN / room name first.'); return; }
+  if(!url){ alert('Firebase URL is missing in the code.'); return; }
+  if(!pin){ alert('Enter a Sync PIN / room name. Use the same PIN on every device.'); return; }
   if(!/^https:\/\/.+firebaseio\.com$|^https:\/\/.+firebasedatabase\.app$/.test(url)){
     if(!confirm('The hardcoded Firebase URL does not look like a Realtime Database URL. Continue anyway?')) return;
   }
   localStorage.setItem(CLOUD_PIN_KEY,pin);
-  updateCloudSyncState('Testing cloud sync…','');
-  setCloudResult('wait','Testing Firebase write/read…');
-  try{
-    await testCloudConnection();
-    await syncNow(e,true);
-    setCloudResult('ok',`Sync worked. Use this same PIN on your phone and laptop. Last checked ${new Date().toLocaleTimeString()}.`);
-  }catch(err){
-    console.warn('[Cloud Sync] test failed',err);
-    updateCloudSyncState('Cloud sync failed','cloud-sync-bad');
-    setCloudResult('bad',syncErrorMessage(err));
-  }
+  updateCloudSyncState('Syncing now…','');
+  await syncNow(e);
 }
 function clearCloudSyncSettings(e){
   e?.stopPropagation?.();
   localStorage.removeItem(CLOUD_PIN_KEY);
   refreshCloudSyncState();
-  setCloudResult('wait','Local only mode is on. This device will not sync with other devices.');
 }
-async function syncNow(e,skipTest=false){
+async function syncNow(e){
   e?.stopPropagation?.();
-  if(!cloudReady()){
-    const msg=getCloudUrl() ? 'Add the Sync PIN first.' : 'Firebase URL is missing in the code.';
-    alert(msg); setCloudResult('bad',msg); return;
-  }
-  updateCloudSyncState('Syncing now…','');
-  setCloudResult('wait','Syncing with Firebase…');
-  try{
-    if(!skipTest) await testCloudConnection();
-    for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
-    updateCloudSyncState(`✅ Synced · user: ${currentUser}`,'cloud-sync-ok');
-    setCloudResult('ok',`Synced successfully at ${new Date().toLocaleTimeString()}.`);
-  }catch(err){
-    console.warn('[Cloud Sync] sync failed',err);
-    updateCloudSyncState('Cloud sync failed','cloud-sync-bad');
-    setCloudResult('bad',syncErrorMessage(err));
-    for (const lang of ['en','hi','ta','yt']) setSyncStatus(lang,'error');
-  }
+  if(!cloudReady()){ alert(getCloudUrl() ? 'Add the Sync PIN first.' : 'Firebase URL is missing in the code.'); return; }
+  for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
+  updateCloudSyncState(`Cloud sync on · user: ${currentUser}`,'cloud-sync-ok');
 }
 window.toggleCloudSyncBox=toggleCloudSyncBox;
 window.saveCloudSyncSettings=saveCloudSyncSettings;
 window.clearCloudSyncSettings=clearCloudSyncSettings;
 window.syncNow=syncNow;
-
 
 function syncKey(lang) { return `recent__${currentUser}__${lang}`; }
 
@@ -2509,7 +2422,6 @@ if ('caches' in window) {
       </section>
       <div class="settings-grid">
         <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Use the same Sync PIN on each device. Your Firebase URL is already inside the code.</p><div id="settings-sync-slot"></div></div>
-        <div class="settings-card"><h3>TMDB API Key</h3><p>The key is still inside the code. This box lets you confirm or replace it without editing the HTML.</p><div id="tmdb-status" style="font-size:12px;color:#4caf82;line-height:1.6;margin-bottom:10px;">✅ TMDB key loaded</div><div class="settings-actions"><button onclick="showTmdbKeyBox()">Show / Change TMDB Key</button></div><div id="tmdb-key-box" style="display:none;margin-top:10px;"><input id="settings-tmdb-key" type="text" placeholder="Paste TMDB API key" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:12px;margin-bottom:8px;"><div class="settings-actions"><button onclick="saveSettingsTmdbKey()">Save TMDB Key</button></div></div></div>
         <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
         <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
         <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
