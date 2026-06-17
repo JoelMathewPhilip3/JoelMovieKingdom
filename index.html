@@ -572,6 +572,16 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .sug-actions{pointer-events:none;}
 .sug-item{position:relative;z-index:1;}
 
+/* ========== SINGLE USER + FIXED SYNC PATCH ========== */
+.user-area.single-user{gap:10px;}
+.fixed-user-pill,.fixed-sync-pill{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:8px 13px;color:var(--text);font-size:12px;}
+.fixed-sync-pill{color:#4caf82;}
+.fixed-sync-pill.syncing{color:var(--gold);}
+.fixed-sync-pill.error{color:#f07a7c;}
+.fixed-sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;}
+.fixed-sync-dot.anim{animation:pulse .8s ease-in-out infinite alternate;}
+#cloud-sync-box{display:none!important;}
+
 </style>
 </head>
 <body>
@@ -579,25 +589,11 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 <!-- SITE HEADER -->
 <div id="site-header">
   <div class="site-logo">👑 Joel's Movie Kingdom</div>
-  <div class="user-area">
-    <div class="user-wrap">
-      <button class="user-btn" id="current-user-btn">
-        <div class="user-avatar" id="user-avatar-hdr">J</div>
-        <div class="user-btn-content">
-          <div class="user-btn-name">
-            <span id="user-name-hdr">Joel</span>
-            <span class="user-btn-arrow">▾</span>
-          </div>
-          <div class="user-btn-hint">click here &nbsp;·&nbsp; + to add user</div>
-        </div>
-      </button>
-      <div class="user-dropdown" id="user-dropdown">
-        <div id="ud-users-list"></div>
-        <div class="ud-sep"></div>
-        <div class="ud-add" onclick="toggleAddUser()">＋ Add New User</div>
-        <input type="text" class="ud-add-input" id="new-user-input" placeholder="Enter name…" onkeydown="if(event.key==='Enter')createUser()" />
-        <button class="ud-add-btn" id="new-user-btn" onclick="createUser()">Create User</button>
-      </div>
+  <div class="user-area single-user">
+    <div class="fixed-user-pill">👤 Joel</div>
+    <div class="fixed-sync-pill" id="header-sync-pill" title="Fixed sync room: 0530" onclick="syncNow(event)">
+      <span class="fixed-sync-dot" id="header-sync-dot"></span>
+      <span id="header-sync-text">Sync 0530</span>
     </div>
   </div>
 </div>
@@ -612,25 +608,8 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   </div>
 </div>
 
-<!-- CLOUD SYNC SETUP -->
-<div id="cloud-sync-box" class="collapsed">
-  <div class="cloud-sync-head" onclick="toggleCloudSyncBox()">
-    <div class="cloud-sync-title">☁ Cross-device Sync</div>
-    <div class="cloud-sync-state" id="cloud-sync-state">Enter Sync PIN</div>
-  </div>
-  <div class="cloud-sync-body">
-    <div class="cloud-sync-help">The Firebase URL is set inside the code. Enter the same Sync PIN on every phone, laptop, and TV to share Continue Watching, timestamps, recent history, and watchlists for each user.</div>
-    <div class="cloud-sync-row">
-      <input type="password" id="cloud-pin-input" placeholder="Sync PIN / room name, e.g. joelmoviekingdom" />
-    </div>
-    <div class="cloud-sync-row">
-      <button onclick="saveCloudSyncSettings(event)">Save Sync PIN</button>
-      <button class="secondary" onclick="syncNow(event)">Sync Now</button>
-      <button class="secondary" onclick="clearCloudSyncSettings(event)">Use Local Only</button>
-    </div>
-    <div class="cloud-sync-help" id="cloud-sync-help">Use the same Sync PIN on every device. Example: 1111 works, but a longer PIN like joel1111 is safer.</div>
-  </div>
-</div>
+<!-- CLOUD SYNC SETUP REMOVED: sync room is hardcoded to 0530 -->
+<div id="cloud-sync-box" class="collapsed" aria-hidden="true"></div>
 
 <!-- MAIN -->
 <div class="main">
@@ -1042,7 +1021,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
    GLOBAL STATE
    ================================================ */
 let TMDB_KEY = 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
-let currentUser = localStorage.getItem('sv_user') || 'Joel';
+const currentUser = 'Joel';
 let timers = {};
 let selMovie = { en:null, hi:null, ta:null };
 let currentYtId = null;
@@ -1379,53 +1358,20 @@ function saveKey(){
 }
 
 /* ================================================
-   USERS
+   SINGLE USER
    ================================================ */
-function getUsers(){ try{return JSON.parse(localStorage.getItem('sv_users')||'["Joel"]');}catch{return['Joel'];} }
-function setUsers(a){ localStorage.setItem('sv_users',JSON.stringify(a)); }
+function getUsers(){ return ['Joel']; }
+function setUsers(a){}
 function initUsers(){
-  let users=getUsers();
-  if(!users.includes(currentUser)){users.push(currentUser);setUsers(users);}
-  renderUserHeader(); renderUserDropdown();
+  try { localStorage.setItem('sv_user','Joel'); } catch(e) {}
+  updateHeaderSyncStatus('idle');
 }
-function renderUserHeader(){
-  document.getElementById('user-name-hdr').textContent=currentUser;
-  document.getElementById('user-avatar-hdr').textContent=currentUser.charAt(0).toUpperCase();
-}
-function renderUserDropdown(){
-  const users=getUsers(),list=document.getElementById('ud-users-list');
-  list.innerHTML=users.map(u=>`
-    <div class="ud-user ${u===currentUser?'active':''}" onclick="switchUser('${u}')">
-      <div class="user-avatar">${u.charAt(0).toUpperCase()}</div>
-      <div class="ud-name">${u}</div>
-      ${users.length>1?`<span style="margin-left:auto;font-size:11px;color:var(--muted);cursor:pointer;" onclick="event.stopPropagation();deleteUser('${u}')">✕</span>`:''}
-    </div>`).join('');
-}
-function switchUser(name){
-  currentUser=name; localStorage.setItem('sv_user',name);
-  renderUserHeader(); renderUserDropdown(); renderAllRecents();
-  document.getElementById('user-dropdown').style.display='none';
-  setTimeout(()=>document.getElementById('user-dropdown').style.display='',200);
-}
-function toggleAddUser(){
-  const inp=document.getElementById('new-user-input'),btn=document.getElementById('new-user-btn');
-  inp.classList.toggle('on'); btn.classList.toggle('on');
-  if(inp.classList.contains('on')) inp.focus();
-}
-function createUser(){
-  const name=document.getElementById('new-user-input').value.trim(); if(!name) return;
-  const users=getUsers(); if(!users.includes(name)){users.push(name);setUsers(users);}
-  document.getElementById('new-user-input').value='';
-  document.getElementById('new-user-input').classList.remove('on');
-  document.getElementById('new-user-btn').classList.remove('on');
-  switchUser(name);
-}
-function deleteUser(name){
-  if(name===currentUser){alert("Can't delete current user.");return;}
-  const users=getUsers().filter(u=>u!==name); setUsers(users);
-  ['en','hi','ta','yt'].forEach(l=>{ localStorage.removeItem(`sv_r_${name}_${l}`); localStorage.removeItem(`sv_w_${name}_${l}`); });
-  renderUserDropdown();
-}
+function renderUserHeader(){}
+function renderUserDropdown(){}
+function switchUser(name){}
+function toggleAddUser(){}
+function createUser(){}
+function deleteUser(name){}
 
 /* ================================================
    SEARCH
@@ -1547,7 +1493,7 @@ function playMovie(lang){
   const bar = document.getElementById('srv-btn-bar-' + lang);
   if (bar) bar.classList.add('on');
 
-  const langLabels={en:'English',hi:'Hindi',ta:'Malayalam / Tamil'};
+  const langLabels={en:'English',hi:'Hindi',ta:'Malayalam / Hindi / Tamil'};
   document.getElementById('nb-'+lang).classList.add('on');
   document.getElementById('npi-'+lang).src=m.poster||'';
   document.getElementById('npi-'+lang).style.display=m.poster?'block':'none';
@@ -1751,19 +1697,17 @@ function showConverter(vid,thumb,title){
 }
 
 /* ================================================
-   CLOUD SYNC
+   CLOUD SYNC - FIXED ROOM 0530
    ================================================ */
-// Paste your Firebase Realtime Database URL here after you create the Firebase project.
-// Example: const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
 const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
-const CLOUD_PIN_KEY = 'sv_cloud_pin';
+const FIXED_SYNC_PIN = '0530';
 function getCloudUrl(){
   const url = String(DEFAULT_CLOUD_URL || '').trim();
   if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') return '';
   return url.replace(/\/+$/,'');
 }
-function getCloudPin(){ return (localStorage.getItem(CLOUD_PIN_KEY)||'').trim(); }
-function cloudReady(){ return !!(getCloudUrl() && getCloudPin()); }
+function getCloudPin(){ return FIXED_SYNC_PIN; }
+function cloudReady(){ return !!getCloudUrl(); }
 function sanitizeFirebaseKey(key){ return String(key).replace(/[.#$\[\]\/]/g,'_'); }
 function simpleHash(str){
   let h=2166136261;
@@ -1771,8 +1715,17 @@ function simpleHash(str){
   return (h>>>0).toString(36);
 }
 function cloudPath(key){
-  const room = sanitizeFirebaseKey(simpleHash(getCloudPin()));
+  const room = sanitizeFirebaseKey(simpleHash(FIXED_SYNC_PIN));
   return `${getCloudUrl()}/movieKingdom/${room}/${sanitizeFirebaseKey(key)}.json`;
+}
+function updateHeaderSyncStatus(status){
+  const pill=document.getElementById('header-sync-pill');
+  const dot=document.getElementById('header-sync-dot');
+  const text=document.getElementById('header-sync-text');
+  if(!pill || !dot || !text) return;
+  pill.className='fixed-sync-pill ' + (status==='syncing'?'syncing':status==='error'?'error':'');
+  dot.className='fixed-sync-dot' + (status==='syncing'?' anim':'');
+  text.textContent = status==='syncing' ? 'Syncing 0530…' : status==='error' ? 'Sync offline' : '✓ Synced 0530';
 }
 async function cloudGet(key) {
   if(!cloudReady()) return null;
@@ -1780,53 +1733,39 @@ async function cloudGet(key) {
     const r = await fetch(cloudPath(key), { method:'GET', cache:'no-store' });
     if(!r.ok) throw new Error('Cloud read failed');
     return await r.json();
-  } catch(e) { console.warn('[Cloud Sync] read failed', e); return null; }
+  } catch(e) { console.warn('[Cloud Sync] read failed', e); updateHeaderSyncStatus('error'); return null; }
 }
 async function cloudSet(key, val) {
   if(!cloudReady()) return;
   try {
+    updateHeaderSyncStatus('syncing');
     const r = await fetch(cloudPath(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) });
     if(!r.ok) throw new Error('Cloud save failed');
-  } catch(e) { console.warn('[Cloud Sync] save failed', e); }
+    updateHeaderSyncStatus('synced');
+  } catch(e) { console.warn('[Cloud Sync] save failed', e); updateHeaderSyncStatus('error'); throw e; }
 }
 async function cloudDelete(key) {
   if(!cloudReady()) return;
-  try { await fetch(cloudPath(key), { method:'DELETE' }); } catch(e) { console.warn('[Cloud Sync] delete failed', e); }
+  try {
+    updateHeaderSyncStatus('syncing');
+    const r = await fetch(cloudPath(key), { method:'DELETE' });
+    if(!r.ok) throw new Error('Cloud delete failed');
+    updateHeaderSyncStatus('synced');
+  } catch(e) { console.warn('[Cloud Sync] delete failed', e); updateHeaderSyncStatus('error'); throw e; }
 }
-function updateCloudSyncState(msg, cls='') {
-  const state=document.getElementById('cloud-sync-state');
-  if(state){ state.textContent=msg; state.className='cloud-sync-state '+cls; }
-  const pin=document.getElementById('cloud-pin-input');
-  if(pin && !pin.value) pin.value=getCloudPin();
-}
-function refreshCloudSyncState(){
-  const hasUrl=!!getCloudUrl();
-  updateCloudSyncState(cloudReady() ? `Cloud sync on · user: ${currentUser}` : hasUrl ? 'Enter Sync PIN to turn on cloud sync' : 'Enter Sync PIN', cloudReady()?'cloud-sync-ok':hasUrl?'':'cloud-sync-bad');
-}
-function toggleCloudSyncBox(){ document.getElementById('cloud-sync-box')?.classList.toggle('collapsed'); refreshCloudSyncState(); }
-async function saveCloudSyncSettings(e){
-  e?.stopPropagation?.();
-  const url=getCloudUrl();
-  const pin=(document.getElementById('cloud-pin-input')?.value||'').trim();
-  if(!url){ alert('Firebase URL is missing in the code.'); return; }
-  if(!pin){ alert('Enter a Sync PIN / room name. Use the same PIN on every device.'); return; }
-  if(!/^https:\/\/.+firebaseio\.com$|^https:\/\/.+firebasedatabase\.app$/.test(url)){
-    if(!confirm('The hardcoded Firebase URL does not look like a Realtime Database URL. Continue anyway?')) return;
-  }
-  localStorage.setItem(CLOUD_PIN_KEY,pin);
-  updateCloudSyncState('Syncing now…','');
-  await syncNow(e);
-}
-function clearCloudSyncSettings(e){
-  e?.stopPropagation?.();
-  localStorage.removeItem(CLOUD_PIN_KEY);
-  refreshCloudSyncState();
-}
+function updateCloudSyncState(msg, cls='') { updateHeaderSyncStatus(cls==='cloud-sync-bad'?'error':'synced'); }
+function refreshCloudSyncState(){ updateHeaderSyncStatus(cloudReady()?'synced':'error'); }
+function toggleCloudSyncBox(){ refreshCloudSyncState(); }
+async function saveCloudSyncSettings(e){ e?.stopPropagation?.(); await syncNow(e); }
+function clearCloudSyncSettings(e){ e?.stopPropagation?.(); alert('Sync is fixed to 0530 now, so there is no local-only mode.'); }
 async function syncNow(e){
   e?.stopPropagation?.();
-  if(!cloudReady()){ alert(getCloudUrl() ? 'Add the Sync PIN first.' : 'Firebase URL is missing in the code.'); return; }
-  for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
-  updateCloudSyncState(`Cloud sync on · user: ${currentUser}`,'cloud-sync-ok');
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  updateHeaderSyncStatus('syncing');
+  try {
+    for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
+    updateHeaderSyncStatus('synced');
+  } catch(err) { updateHeaderSyncStatus('error'); }
 }
 window.toggleCloudSyncBox=toggleCloudSyncBox;
 window.saveCloudSyncSettings=saveCloudSyncSettings;
@@ -1911,6 +1850,7 @@ function playFromWatchlist(lang,idx){
 }
 
 function setSyncStatus(lang, status) {
+  if (typeof updateHeaderSyncStatus === 'function') updateHeaderSyncStatus(status);
   if (lang !== 'en') return;
   const dot = document.getElementById('sync-dot-en');
   const pulse = document.getElementById('sync-pulse-en');
@@ -1918,7 +1858,7 @@ function setSyncStatus(lang, status) {
   if (!dot) return;
   dot.className = 'sync-dot ' + status;
   pulse.className = 'sync-pulse' + (status === 'syncing' ? ' anim' : '');
-  label.textContent = status === 'synced' ? 'synced' : status === 'syncing' ? 'syncing…' : status === 'error' ? 'offline' : '…';
+  label.textContent = status === 'synced' ? '✓ synced' : status === 'syncing' ? 'syncing…' : status === 'error' ? 'offline' : '…';
 }
 
 async function loadFromCloud(lang) {
