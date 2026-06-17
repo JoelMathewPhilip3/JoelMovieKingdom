@@ -1049,7 +1049,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 /* ================================================
    GLOBAL STATE
    ================================================ */
-let TMDB_KEY = 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
+let TMDB_KEY = localStorage.getItem('tmdb_key') || 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
 let currentUser = localStorage.getItem('sv_user') || 'Joel';
 let timers = {};
 let selMovie = { en:null, hi:null, ta:null };
@@ -1380,11 +1380,43 @@ function switchTab(t){
    API KEY
    ================================================ */
 function saveKey(){
-  const v=document.getElementById('api-key-input').value.trim();
+  const input = document.getElementById('api-key-input');
+  const v = input ? input.value.trim() : '';
   if(!v) return;
-  TMDB_KEY=v; localStorage.setItem('tmdb_key',v);
-  document.getElementById('api-banner').classList.add('hidden');
+  TMDB_KEY = v;
+  localStorage.setItem('tmdb_key', v);
+  const banner = document.getElementById('api-banner');
+  if (banner) banner.classList.add('hidden');
+  updateTmdbStatus('✅ TMDB key saved');
 }
+
+function updateTmdbStatus(msg){
+  const el = document.getElementById('tmdb-status');
+  if (!el) return;
+  const masked = TMDB_KEY ? (TMDB_KEY.slice(0,4) + '••••••••' + TMDB_KEY.slice(-4)) : 'Missing';
+  el.innerHTML = msg ? `${msg}<br><span style="color:var(--muted);">Current key: ${masked}</span>` : `✅ TMDB key loaded<br><span style="color:var(--muted);">Current key: ${masked}</span>`;
+}
+
+function showTmdbKeyBox(){
+  const box = document.getElementById('tmdb-key-box');
+  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  const input = document.getElementById('settings-tmdb-key');
+  if (input) input.value = TMDB_KEY || '';
+}
+
+function saveSettingsTmdbKey(){
+  const input = document.getElementById('settings-tmdb-key');
+  const v = input ? input.value.trim() : '';
+  if (!v) return updateTmdbStatus('❌ Paste a TMDB key first');
+  TMDB_KEY = v;
+  localStorage.setItem('tmdb_key', v);
+  updateTmdbStatus('✅ TMDB key saved');
+}
+
+window.saveKey = saveKey;
+window.updateTmdbStatus = updateTmdbStatus;
+window.showTmdbKeyBox = showTmdbKeyBox;
+window.saveSettingsTmdbKey = saveSettingsTmdbKey;
 
 /* ================================================
    USERS
@@ -2477,6 +2509,7 @@ if ('caches' in window) {
       </section>
       <div class="settings-grid">
         <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Use the same Sync PIN on each device. Your Firebase URL is already inside the code.</p><div id="settings-sync-slot"></div></div>
+        <div class="settings-card"><h3>TMDB API Key</h3><p>The key is still inside the code. This box lets you confirm or replace it without editing the HTML.</p><div id="tmdb-status" style="font-size:12px;color:#4caf82;line-height:1.6;margin-bottom:10px;">✅ TMDB key loaded</div><div class="settings-actions"><button onclick="showTmdbKeyBox()">Show / Change TMDB Key</button></div><div id="tmdb-key-box" style="display:none;margin-top:10px;"><input id="settings-tmdb-key" type="text" placeholder="Paste TMDB API key" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:12px;margin-bottom:8px;"><div class="settings-actions"><button onclick="saveSettingsTmdbKey()">Save TMDB Key</button></div></div></div>
         <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
         <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
         <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
