@@ -593,6 +593,38 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .master-sync-message.work{color:var(--gold);border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.08);}
 #cloud-sync-box{display:none!important;}
 
+
+/* ========== REQUESTED CLEAN HEADER / HOME PATCH ========== */
+.device-master-select{
+  background:var(--surface2);border:1px solid var(--border);border-radius:999px;
+  padding:8px 14px;color:var(--text);font-size:12px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;min-width:190px;
+}
+.device-master-select:focus{outline:none;border-color:var(--gold);}
+.master-sync-message{width:auto;min-width:190px;margin-top:0!important;}
+.premium-mini{position:relative;}
+.premium-remove{
+  position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.78);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;
+  opacity:0;transition:opacity .15s,transform .15s;z-index:3;
+}
+.premium-mini:hover .premium-remove{opacity:1;}
+.premium-remove:hover{transform:scale(1.08);border-color:rgba(240,122,124,.55);color:#f07a7c;}
+.yt-url-wrap{overflow:visible!important;position:relative!important;z-index:5000!important;}
+#sug-yt{display:block;position:absolute!important;top:calc(100% + 4px)!important;left:0!important;right:0!important;z-index:999999!important;box-shadow:0 18px 50px rgba(0,0,0,.75)!important;}
+.advanced-toggle-btn.showing{background:rgba(76,175,130,.16)!important;border-color:rgba(76,175,130,.55)!important;color:#4caf82!important;}
+.advanced-toggle-btn.hiding{background:rgba(155,35,53,.16)!important;border-color:rgba(240,122,124,.55)!important;color:#f07a7c!important;}
+@media(max-width:640px){.device-master-select{width:100%;}.master-sync-message{width:100%;}}
+
+
+/* ========== FOLLOW-UP HEADER CLEANUP ========== */
+#site-header{justify-content:space-between!important;}
+#site-header .user-area.single-user{margin-left:auto!important;justify-content:flex-end!important;align-items:center!important;width:auto!important;}
+#device-master-select{margin-left:auto;}
+.master-sync-message{display:none!important;}
+@media(max-width:640px){#site-header{flex-wrap:nowrap!important;}#site-header .site-logo{min-width:0;}#site-header .user-area.single-user{width:auto!important;margin-left:auto!important;justify-content:flex-end!important;flex-wrap:nowrap!important;} .device-master-select{width:auto!important;max-width:210px;min-width:170px;}}
+
 </style>
 </head>
 <body>
@@ -601,15 +633,12 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 <div id="site-header">
   <div class="site-logo">👑 Joel's Movie Kingdom</div>
   <div class="user-area single-user">
-    <div class="fixed-user-pill">👤 Joel</div>
-    <div class="fixed-sync-pill" id="header-sync-pill" title="Fixed sync room: 0530" onclick="syncNow(event)">
-      <span class="fixed-sync-dot" id="header-sync-dot"></span>
-      <span id="header-sync-text">Sync 0530</span>
-    </div>
-    <button type="button" class="fixed-source-btn primary" id="make-master-btn">⬆ Make this device master</button>
-    <button type="button" class="fixed-source-btn" id="load-master-btn">⬇ Load master data</button>
-    <div class="master-sync-message on work" id="master-sync-message">Ready — master sync buttons loading…</div>
-  </div>
+    <select id="device-master-select" class="device-master-select" onchange="handleMasterDropdown(this,event)">
+      <option value="">Device master</option>
+      <option value="upload">Make this device master</option>
+      <option value="load">Load master data</option>
+    </select>
+</div>
 </div>
 
 <!-- API BANNER -->
@@ -1631,7 +1660,11 @@ function initYTSearch(){
     clearTimeout(timers.yt);
     const q=inp.value.trim();
     if(!q||q.startsWith('http')||q.includes('youtu')){box.innerHTML='';return;}
-    timers.yt=setTimeout(()=>ytSearch(q),400);
+    timers.yt=setTimeout(()=>ytSearch(q),300);
+  });
+  inp.addEventListener('focus',()=>{
+    const q=inp.value.trim();
+    if(q && !q.startsWith('http') && !q.includes('youtu') && !box.innerHTML.trim()) ytSearch(q);
   });
   inp.addEventListener('keydown',e=>{if(e.key==='Enter') loadYT();});
   document.addEventListener('click',e=>{if(!e.target.closest('#yt-url')&&!e.target.closest('#sug-yt')) box.innerHTML='';});
@@ -1788,11 +1821,8 @@ window.syncNow=syncNow;
 
 
 function showMasterSyncMessage(kind, msg){
-  const cls = kind==='ok' ? 'ok' : kind==='bad' ? 'bad' : 'work';
-  ['master-sync-message','settings-master-sync-message'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){ el.className='master-sync-message on '+cls; el.textContent=msg; }
-  });
+  // Status box removed by request; keep function so upload/load logic still works.
+  console.log(msg || (kind==='ok' ? 'Master worked' : 'Master not worked'));
 }
 function setMasterButtonsBusy(isBusy){
   ['make-master-btn','load-master-btn'].forEach(id=>{
@@ -1953,7 +1983,7 @@ async function addToWatchlist(lang,movie){
   if(lang==='yt') return;
   let a=getW(lang).filter(x=>!(x.tmdbId===movie.tmdbId && x.type===movie.type));
   a.unshift({...movie, addedAt:Date.now()});
-  if(a.length>100) a=a.slice(0,100);
+  if(a.length>30) a=a.slice(0,30);
   setWLocal(lang,a);
   renderWatchlist(lang);
   try{ await cloudSet(watchSyncKey(lang),a); }catch(e){}
@@ -2498,11 +2528,8 @@ if ('caches' in window) {
         <div class="premium-sub">Advanced tools live here so the main watching page stays clean.</div>
       </section>
       <div class="settings-grid">
-        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Sync room is fixed to 0530. Use the master buttons when one device has the correct movies and the other device is different.</p><div class="settings-actions"><button onclick="makeThisDeviceSourceOfTruth(event)">Make this device master</button><button onclick="replaceThisDeviceFromCloud(event)">Load master data</button><button onclick="syncNow(event)">Normal Sync</button></div><div id="settings-master-sync-message" class="master-sync-message">Ready.</div><div id="settings-sync-slot"></div></div>
-        <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
-        <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
-        <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
-        <div class="settings-card"><h3>Advanced Tools</h3><p>Einthusan/search helpers and destructive buttons are hidden from the main page for a cleaner premium feel.</p><div class="settings-actions"><button onclick="toggleAdvancedTools()">Show / Hide Advanced Tools</button></div></div>
+        <div class="settings-card"><h3>Server Tools</h3><p>Check server availability and refresh the server buttons.</p><div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div></div>
+        <div class="settings-card"><h3>Advanced Tools</h3><p>Show or hide the extra server controls and helper tools.</p><div class="settings-actions"><button id="advanced-tools-btn" class="advanced-toggle-btn hiding" onclick="toggleAdvancedTools()">Advanced tools: hiding</button></div></div>
       </div>`);
 
     const host=document.getElementById('movie-host');
@@ -2515,10 +2542,6 @@ if ('caches' in window) {
       }
     });
     
-    const sync=document.getElementById('cloud-sync-box');
-    const syncSlot=document.getElementById('settings-sync-slot');
-    if(sync && syncSlot){ sync.classList.remove('collapsed'); syncSlot.appendChild(sync); }
-    updateCleanModeLabel();
     selectPremiumMovieLang(premiumMovieLang, true);
     switchTab('home');
   }
@@ -2552,37 +2575,61 @@ if ('caches' in window) {
 
   function itemMini(m, lang, i, source){
     const fn = source==='watch' ? `playFromWatchlist('${lang}',${i})` : `replayR('${lang}',${i})`;
-    return `<div class="premium-mini" onclick="switchTab('movies');selectPremiumMovieLang('${lang}',true);${fn}"><img src="${safePoster(m)}" alt="${safeText(m.title)}" onerror="this.style.display='none'"><div>${safeText(m.title)}</div></div>`;
+    const remove = source==='watch'
+      ? `removeHomeMovie(event,'watch','${lang}',${i})`
+      : `removeHomeMovie(event,'recent','${lang}',${i})`;
+    return `<div class="premium-mini" onclick="switchTab('movies');selectPremiumMovieLang('${lang}',true);${fn}">
+      <button class="premium-remove" title="Remove" onclick="${remove}">✕</button>
+      <img src="${safePoster(m)}" alt="${safeText(m.title)}" onerror="this.style.display='none'">
+      <div>${safeText(m.title)}</div>
+    </div>`;
   }
+
+  window.removeHomeMovie = async function(e, source, lang, i){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    if(source === 'watch'){
+      const a = getW(lang); a.splice(i,1); setWLocal(lang,a);
+      try{ await cloudSet(watchSyncKey(lang),a); }catch(err){}
+      renderWatchlist(lang);
+    } else {
+      const a = getR(lang); a.splice(i,1); setRLocal(lang,a);
+      try{ await cloudSet(syncKey(lang),a); }catch(err){}
+      renderRecent(lang); renderContinueWatching(lang);
+    }
+    renderPremiumHome();
+  };
 
   function renderPremiumHome(){
     const cont=document.getElementById('premium-continue');
     const watch=document.getElementById('premium-watch-ta');
     const recent=document.getElementById('premium-recent-all');
     const langs=['ta','hi','en'];
+    const combinedRecent=langs
+      .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
+      .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0));
 
     if(cont){
-      const combinedRecent=langs
-        .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
-        .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0));
-      const first=combinedRecent[0];
-      cont.innerHTML = first ? `<div class="premium-mini-grid">${itemMini(first.m, first.lang, first.i, 'recent')}</div>` : `<div class="premium-empty">Nothing saved yet. Start a movie and it will appear here.</div>`;
+      const firstFour=combinedRecent.slice(0,4);
+      cont.innerHTML = firstFour.length
+        ? `<div class="premium-mini-grid">${firstFour.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>`
+        : `<div class="premium-empty">Nothing saved yet. Start a movie and it will appear here.</div>`;
     }
 
     if(watch){
       const combinedWatch=langs
         .flatMap(lang => (getW?.(lang)||[]).map((m,i)=>({m,i,lang})))
         .sort((a,b)=>(b.m.addedAt||0)-(a.m.addedAt||0))
-        .slice(0,24);
-      watch.innerHTML = combinedWatch.length ? `<div class="premium-mini-grid">${combinedWatch.map(x=>itemMini(x.m,x.lang,x.i,'watch')).join('')}</div>` : `<div class="premium-empty">Search any title and tap ＋ Watchlist. Your watchlist can store up to 100 movies or series.</div>`;
+        .slice(0,30);
+      watch.innerHTML = combinedWatch.length
+        ? `<div class="premium-mini-grid">${combinedWatch.map(x=>itemMini(x.m,x.lang,x.i,'watch')).join('')}</div>`
+        : `<div class="premium-empty">Search any title and tap ＋ Watchlist. Your watchlist can store around 30 movies or series.</div>`;
     }
 
     if(recent){
-      const combined=langs
-        .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
-        .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0))
-        .slice(0,24);
-      recent.innerHTML = combined.length ? `<div class="premium-mini-grid">${combined.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>` : `<div class="premium-empty">Recently watched items from every language will appear here.</div>`;
+      const nextSix=combinedRecent.slice(4,10);
+      recent.innerHTML = nextSix.length
+        ? `<div class="premium-mini-grid">${nextSix.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>`
+        : `<div class="premium-empty">Recently watched items after the first 4 will appear here.</div>`;
     }
   }
 
@@ -2655,17 +2702,41 @@ if ('caches' in window) {
     if(label) label.textContent=on?'Clean Mode: On':'Clean Mode: Off';
     if(btn) btn.textContent=on?'Turn Off':'Turn On';
   }
+  function updateAdvancedToolsButton(){
+    const btn=document.getElementById('advanced-tools-btn');
+    if(!btn) return;
+    const show=document.body.classList.contains('show-advanced-tools');
+    btn.className='advanced-toggle-btn ' + (show ? 'showing' : 'hiding');
+    btn.textContent=show ? 'Advanced tools: showing' : 'Advanced tools: hiding';
+  }
+
   window.toggleAdvancedTools=function(){
     document.body.classList.toggle('show-advanced-tools');
     const show=document.body.classList.contains('show-advanced-tools');
     document.querySelectorAll('.ein-helper').forEach(el=>el.style.setProperty('display', show?'block':'none','important'));
     document.querySelectorAll('#movie-host .srv-bar-actions').forEach(el=>el.style.setProperty('display', show?'flex':'none','important'));
+    updateAdvancedToolsButton();
+  };
+
+  window.findNewServers=async function(){
+    const btn=document.getElementById('find-servers-btn');
+    const old=btn ? btn.textContent : '';
+    if(btn){ btn.textContent='Checking…'; btn.disabled=true; }
+    try{
+      await Promise.all(MOVIE_LANGS.map(lang=>testAllServers(lang)));
+      if(btn) btn.textContent='Servers checked ✓';
+    }catch(e){
+      console.error('[Find servers failed]', e);
+      if(btn) btn.textContent='Server check failed';
+    }finally{
+      setTimeout(()=>{ if(btn){ btn.textContent=old || 'Find new servers'; btn.disabled=false; } }, 1400);
+    }
   };
 
   window.addEventListener('load', function(){
     setupShell();
-    applyPremiumCleanMode();
     renderPremiumHome();
+    if(typeof updateAdvancedToolsButton === 'function') updateAdvancedToolsButton();
   });
 })();
 </script>
@@ -2824,25 +2895,12 @@ if ('caches' in window) {
   function safeJsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value ?? [])); }
 
   function status(kind, message){
-    const cls = kind === 'ok' ? 'ok' : kind === 'bad' ? 'bad' : 'work';
-    ['master-sync-message','settings-master-sync-message'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el){ el.className = 'master-sync-message on ' + cls; el.textContent = message; }
-    });
-    const header = document.getElementById('header-sync-text');
-    const pill = document.getElementById('header-sync-pill');
-    const dot = document.getElementById('header-sync-dot');
-    if(header){
-      header.textContent = kind === 'ok' ? '✓ Synced 0530' : kind === 'bad' ? 'Sync issue 0530' : 'Working 0530…';
-    }
-    if(pill){ pill.className = 'fixed-sync-pill ' + (kind === 'bad' ? 'error' : kind === 'work' ? 'syncing' : ''); }
-    if(dot){ dot.className = 'fixed-sync-dot' + (kind === 'work' ? ' anim' : ''); }
+    // Visual sync/status box removed by request.
+    console.log(message || (kind === 'ok' ? 'Master worked' : kind === 'bad' ? 'Master not worked' : 'Working'));
   }
   function busy(on){
-    ['make-master-btn','load-master-btn'].forEach(id => {
-      const b = document.getElementById(id);
-      if(b){ b.disabled = !!on; b.style.opacity = on ? '.6' : ''; b.style.cursor = on ? 'wait' : 'pointer'; }
-    });
+    const sel = document.getElementById('device-master-select');
+    if(sel){ sel.disabled = !!on; sel.style.opacity = on ? '.6' : ''; sel.style.cursor = on ? 'wait' : 'pointer'; }
   }
   function getLocalSnapshot(){
     const data = { version: 3, pin: PIN, user: USER, updatedAt: new Date().toISOString(), recent: {}, watchlist: {}, timestamps: {} };
@@ -2900,7 +2958,7 @@ if ('caches' in window) {
   window.makeThisDeviceSourceOfTruth = async function(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
     busy(true);
-    status('work','Clicked ✓ Uploading THIS device data to master cloud room 0530…');
+    status('work','Master upload working…');
     try{
       const snap = getLocalSnapshot();
       const c = countSnapshot(snap);
@@ -2908,44 +2966,42 @@ if ('caches' in window) {
       const verify = await getCloud(MASTER_KEY);
       const vc = countSnapshot(verify);
       if(vc.recent !== c.recent || vc.watch !== c.watch) throw new Error('Firebase verification count mismatch.');
-      status('ok', `✓ Master upload worked. Cloud room 0530 now has ${vc.recent} recent items, ${vc.watch} watchlist items, and ${vc.ts} timestamps from this device.`);
+      status('ok', 'Master upload worked.');
     }catch(err){
       console.error('[Master Sync Upload Failed]', err);
-      status('bad', '✕ Master upload failed. Open browser console for details. Most common cause: Firebase database rules do not allow write.');
+      status('bad', 'Master upload not worked.');
     }finally{ busy(false); }
   };
 
   window.replaceThisDeviceFromCloud = async function(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
     busy(true);
-    status('work','Clicked ✓ Loading master cloud data from room 0530 onto THIS device…');
+    status('work','Load working…');
     try{
       const snap = await getCloud(MASTER_KEY);
       if(!snap) throw new Error('No master snapshot found yet. Upload from laptop first.');
       applySnapshotToThisDevice(snap);
       refreshUI();
       const c = countSnapshot(snap);
-      status('ok', `✓ Master data loaded. This device now has ${c.recent} recent items, ${c.watch} watchlist items, and ${c.ts} timestamps from room 0530.`);
+      status('ok', 'Load worked.');
     }catch(err){
       console.error('[Master Sync Download Failed]', err);
-      status('bad', '✕ Load failed. Upload from laptop first, then try again. If it still fails, Firebase read rules are blocking it.');
+      status('bad', 'Load not worked.');
     }finally{ busy(false); }
   };
 
+  window.handleMasterDropdown = async function(sel,e){
+    const val = sel?.value || '';
+    if(!val) return;
+    if(val === 'upload') await window.makeThisDeviceSourceOfTruth(e);
+    if(val === 'load') await window.replaceThisDeviceFromCloud(e);
+    if(sel) sel.value = '';
+  };
+
   function wireButtons(){
-    const up = document.getElementById('make-master-btn');
-    const down = document.getElementById('load-master-btn');
-    if(up){
-      up.removeAttribute('onclick');
-      up.onclick = null;
-      up.addEventListener('click', window.makeThisDeviceSourceOfTruth, true);
-    }
-    if(down){
-      down.removeAttribute('onclick');
-      down.onclick = null;
-      down.addEventListener('click', window.replaceThisDeviceFromCloud, true);
-    }
-    status('work','Ready. Buttons are wired. Click Make this device master on laptop, then Load master data on phone.');
+    const sel = document.getElementById('device-master-select');
+    if(sel) sel.value = '';
+    status('work','Ready.');
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireButtons);
