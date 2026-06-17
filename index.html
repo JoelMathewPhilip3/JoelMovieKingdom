@@ -606,9 +606,9 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <span class="fixed-sync-dot" id="header-sync-dot"></span>
       <span id="header-sync-text">Sync 0530</span>
     </div>
-    <button class="fixed-source-btn primary" id="make-master-btn" onclick="makeThisDeviceSourceOfTruth(event)">⬆ Make this device master</button>
-    <button class="fixed-source-btn" id="load-master-btn" onclick="replaceThisDeviceFromCloud(event)">⬇ Load master data</button>
-    <div class="master-sync-message" id="master-sync-message">Ready.</div>
+    <button type="button" class="fixed-source-btn primary" id="make-master-btn">⬆ Make this device master</button>
+    <button type="button" class="fixed-source-btn" id="load-master-btn">⬇ Load master data</button>
+    <div class="master-sync-message on work" id="master-sync-message">Ready — master sync buttons loading…</div>
   </div>
 </div>
 
@@ -2787,6 +2787,170 @@ if ('caches' in window) {
   bindSearchInputs();
   window.addEventListener('load', bindSearchInputs);
   setTimeout(bindSearchInputs, 800);
+})();
+</script>
+
+
+
+<script>
+/* ========== FINAL ROBUST MASTER SYNC FIX - does not depend on older sync functions ========== */
+(function(){
+  'use strict';
+
+  const USER = 'Joel';
+  const PIN = '0530';
+  const LANGS = ['en','hi','ta','yt'];
+  const DB_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
+  const MASTER_KEY = 'master_snapshot__Joel__0530';
+
+  function simpleHash(str){
+    let h = 2166136261;
+    str = String(str || '');
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); }
+    return (h >>> 0).toString(36);
+  }
+  function cleanKey(key){ return String(key).replace(/[.#$\[\]\/]/g,'_'); }
+  function cloudUrl(key){ return `${DB_URL.replace(/\/+$/,'')}/movieKingdom/${cleanKey(simpleHash(PIN))}/${cleanKey(key)}.json`; }
+  function localRecentKey(lang){ return `sv_r_${USER}_${lang}`; }
+  function localWatchKey(lang){ return `sv_w_${USER}_${lang}`; }
+  function safeJsonGet(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      if(raw === null || raw === undefined || raw === '') return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed ?? fallback;
+    }catch(e){ return fallback; }
+  }
+  function safeJsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value ?? [])); }
+
+  function status(kind, message){
+    const cls = kind === 'ok' ? 'ok' : kind === 'bad' ? 'bad' : 'work';
+    ['master-sync-message','settings-master-sync-message'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el){ el.className = 'master-sync-message on ' + cls; el.textContent = message; }
+    });
+    const header = document.getElementById('header-sync-text');
+    const pill = document.getElementById('header-sync-pill');
+    const dot = document.getElementById('header-sync-dot');
+    if(header){
+      header.textContent = kind === 'ok' ? '✓ Synced 0530' : kind === 'bad' ? 'Sync issue 0530' : 'Working 0530…';
+    }
+    if(pill){ pill.className = 'fixed-sync-pill ' + (kind === 'bad' ? 'error' : kind === 'work' ? 'syncing' : ''); }
+    if(dot){ dot.className = 'fixed-sync-dot' + (kind === 'work' ? ' anim' : ''); }
+  }
+  function busy(on){
+    ['make-master-btn','load-master-btn'].forEach(id => {
+      const b = document.getElementById(id);
+      if(b){ b.disabled = !!on; b.style.opacity = on ? '.6' : ''; b.style.cursor = on ? 'wait' : 'pointer'; }
+    });
+  }
+  function getLocalSnapshot(){
+    const data = { version: 3, pin: PIN, user: USER, updatedAt: new Date().toISOString(), recent: {}, watchlist: {}, timestamps: {} };
+    LANGS.forEach(lang => {
+      data.recent[lang] = safeJsonGet(localRecentKey(lang), []);
+      if(lang !== 'yt') data.watchlist[lang] = safeJsonGet(localWatchKey(lang), []);
+    });
+    const tsPrefix = `sv_ts_${USER}_`;
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(tsPrefix)) data.timestamps[k] = safeJsonGet(k, null);
+    }
+    return data;
+  }
+  function countSnapshot(snap){
+    let recent = 0, watch = 0, ts = 0;
+    LANGS.forEach(lang => {
+      recent += Array.isArray(snap?.recent?.[lang]) ? snap.recent[lang].length : 0;
+      watch += Array.isArray(snap?.watchlist?.[lang]) ? snap.watchlist[lang].length : 0;
+    });
+    ts = snap?.timestamps ? Object.keys(snap.timestamps).length : 0;
+    return {recent, watch, ts};
+  }
+  async function putCloud(key, value){
+    const res = await fetch(cloudUrl(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(value) });
+    if(!res.ok) throw new Error(`Firebase write failed: ${res.status}`);
+    return await res.json();
+  }
+  async function getCloud(key){
+    const res = await fetch(cloudUrl(key), { method:'GET', cache:'no-store' });
+    if(!res.ok) throw new Error(`Firebase read failed: ${res.status}`);
+    return await res.json();
+  }
+  function applySnapshotToThisDevice(snap){
+    if(!snap || !snap.recent) throw new Error('Master snapshot is empty or invalid.');
+    LANGS.forEach(lang => {
+      safeJsonSet(localRecentKey(lang), Array.isArray(snap.recent[lang]) ? snap.recent[lang] : []);
+      if(lang !== 'yt') safeJsonSet(localWatchKey(lang), Array.isArray(snap.watchlist?.[lang]) ? snap.watchlist[lang] : []);
+    });
+    if(snap.timestamps && typeof snap.timestamps === 'object'){
+      Object.keys(snap.timestamps).forEach(k => {
+        if(k.startsWith(`sv_ts_${USER}_`)) safeJsonSet(k, snap.timestamps[k]);
+      });
+    }
+  }
+  function refreshUI(){
+    LANGS.forEach(lang => {
+      try{ if(window.renderRecent) window.renderRecent(lang); }catch(e){}
+      try{ if(window.renderWatchlist) window.renderWatchlist(lang); }catch(e){}
+      try{ if(window.renderContinueWatching) window.renderContinueWatching(lang); }catch(e){}
+    });
+    try{ if(window.renderPremiumHome) window.renderPremiumHome(); }catch(e){}
+  }
+
+  window.makeThisDeviceSourceOfTruth = async function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    busy(true);
+    status('work','Clicked ✓ Uploading THIS device data to master cloud room 0530…');
+    try{
+      const snap = getLocalSnapshot();
+      const c = countSnapshot(snap);
+      await putCloud(MASTER_KEY, snap);
+      const verify = await getCloud(MASTER_KEY);
+      const vc = countSnapshot(verify);
+      if(vc.recent !== c.recent || vc.watch !== c.watch) throw new Error('Firebase verification count mismatch.');
+      status('ok', `✓ Master upload worked. Cloud room 0530 now has ${vc.recent} recent items, ${vc.watch} watchlist items, and ${vc.ts} timestamps from this device.`);
+    }catch(err){
+      console.error('[Master Sync Upload Failed]', err);
+      status('bad', '✕ Master upload failed. Open browser console for details. Most common cause: Firebase database rules do not allow write.');
+    }finally{ busy(false); }
+  };
+
+  window.replaceThisDeviceFromCloud = async function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    busy(true);
+    status('work','Clicked ✓ Loading master cloud data from room 0530 onto THIS device…');
+    try{
+      const snap = await getCloud(MASTER_KEY);
+      if(!snap) throw new Error('No master snapshot found yet. Upload from laptop first.');
+      applySnapshotToThisDevice(snap);
+      refreshUI();
+      const c = countSnapshot(snap);
+      status('ok', `✓ Master data loaded. This device now has ${c.recent} recent items, ${c.watch} watchlist items, and ${c.ts} timestamps from room 0530.`);
+    }catch(err){
+      console.error('[Master Sync Download Failed]', err);
+      status('bad', '✕ Load failed. Upload from laptop first, then try again. If it still fails, Firebase read rules are blocking it.');
+    }finally{ busy(false); }
+  };
+
+  function wireButtons(){
+    const up = document.getElementById('make-master-btn');
+    const down = document.getElementById('load-master-btn');
+    if(up){
+      up.removeAttribute('onclick');
+      up.onclick = null;
+      up.addEventListener('click', window.makeThisDeviceSourceOfTruth, true);
+    }
+    if(down){
+      down.removeAttribute('onclick');
+      down.onclick = null;
+      down.addEventListener('click', window.replaceThisDeviceFromCloud, true);
+    }
+    status('work','Ready. Buttons are wired. Click Make this device master on laptop, then Load master data on phone.');
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireButtons);
+  else wireButtons();
+  window.addEventListener('load', wireButtons);
 })();
 </script>
 
