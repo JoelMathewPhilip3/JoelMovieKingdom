@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Joel's Movie Kingdom</title>
+<title>Joel's Movie Kingdom 2</title>
 
 <!-- PWA -->
 <meta name="application-name" content="Movie Kingdom">
@@ -637,7 +637,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   <div class="tabs">
     <div class="tab active" data-tab="en" onclick="switchTab('en')">🇺🇸 English</div>
     <div class="tab" data-tab="hi" onclick="switchTab('hi')">🇮🇳 Hindi</div>
-    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Malayalam / Tamil</div>
+    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Malayalam / Hindi / Tamil</div>
     <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
   </div>
 
@@ -897,7 +897,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div class="watch-grid" id="watch-grid-ta"></div>
     </div>
     <div class="search-sec">
-      <div class="section-label">Search Malayalam / Tamil Movie or Series</div>
+      <div class="section-label">Search Malayalam / Hindi / Tamil Movie or Series</div>
       <div class="search-row">
         <div class="srch-wrap">
           <input type="text" id="srch-ta" placeholder="Type title…" autocomplete="off" />
@@ -909,6 +909,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <div class="ctrl-lbl">Language</div>
           <select id="lang-ta" onchange="updateEinthusan('ta', selMovie.ta?.title || document.getElementById('srch-ta').value || '')">
             <option value="malayalam" selected>Malayalam</option>
+            <option value="hindi">Hindi</option>
             <option value="tamil">Tamil</option>
           </select>
         </div>
@@ -1876,7 +1877,7 @@ async function addToWatchlist(lang,movie){
   if(lang==='yt') return;
   let a=getW(lang).filter(x=>!(x.tmdbId===movie.tmdbId && x.type===movie.type));
   a.unshift({...movie, addedAt:Date.now()});
-  if(a.length>60) a=a.slice(0,60);
+  if(a.length>100) a=a.slice(0,100);
   setWLocal(lang,a);
   renderWatchlist(lang);
   try{ await cloudSet(watchSyncKey(lang),a); }catch(e){}
@@ -1935,7 +1936,7 @@ async function loadFromCloud(lang) {
         if (seen.has(k)) return false;
         seen.add(k); return true;
       });
-      merged = merged.slice(0, 24);
+      merged = merged.slice(0, 50);
       setRLocal(lang, merged);
       if (localNewer.length) await cloudSet(syncKey(lang), merged);
     } else {
@@ -1951,7 +1952,7 @@ async function loadFromCloud(lang) {
 async function addRecent(lang, movie) {
   let a = getR(lang).filter(x => !(x.tmdbId === movie.tmdbId && x.type === movie.type));
   a.unshift({...movie, ts: Date.now()});
-  if (a.length > 24) a = a.slice(0, 24);
+  if (a.length > 50) a = a.slice(0, 50);
   setRLocal(lang, a);
   renderRecent(lang);
   renderContinueWatching(lang);
@@ -2366,7 +2367,7 @@ if ('caches' in window) {
 <script>
 /* ========== PREMIUM APP SHELL PATCH ========== */
 (function(){
-  const MOVIE_LANGS = ['ta','en'];
+  const MOVIE_LANGS = ['ta','hi','en'];
   let premiumMovieLang = localStorage.getItem('premium_movie_lang') || 'ta';
   if (!MOVIE_LANGS.includes(premiumMovieLang)) premiumMovieLang='ta';
   const oldSwitchTab = window.switchTab;
@@ -2375,7 +2376,7 @@ if ('caches' in window) {
   const oldPickMovie = window.pickMovie;
   const oldDoSearch = window.doSearch;
 
-  function labelFor(lang){ return lang==='ta'?'Malayalam / Tamil':lang==='en'?'English':lang==='yt'?'YouTube':'Movies'; }
+  function labelFor(lang){ return lang==='ta'?'Malayalam / Tamil':lang==='hi'?'Hindi':lang==='en'?'English':lang==='yt'?'YouTube':'Movies'; }
   function safePoster(m){ return m?.poster || ''; }
   function safeText(s){ return (window.escHtml ? escHtml(String(s||'')) : String(s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))); }
 
@@ -2399,24 +2400,16 @@ if ('caches' in window) {
     }
 
     const home=createTab('tab-home', `
-      <section class="premium-hero">
-        <div class="premium-kicker">Personal cinema dashboard</div>
-        <div class="premium-title">Joel's Movie Kingdom</div>
-        <div class="premium-sub">Search, resume, and keep your Malayalam-first watchlist synced across your phone, laptop, and TV.</div>
-        <div class="premium-actions">
-          <button class="premium-primary" onclick="switchTab('movies')">Start Watching</button>
-          <button class="premium-secondary" onclick="switchTab('settings')">Sync / Settings</button>
-        </div>
-      </section>
       <div class="premium-grid">
         <div class="premium-card"><div class="premium-card-title">Continue Watching <button class="premium-secondary" onclick="switchTab('movies')" style="padding:6px 10px;font-size:10px;">Open</button></div><div id="premium-continue"></div></div>
-        <div class="premium-card"><div class="premium-card-title">Malayalam Watchlist</div><div id="premium-watch-ta"></div></div>
+        <div class="premium-card"><div class="premium-card-title">All Languages Watchlist</div><div id="premium-watch-ta"></div></div>
         <div class="premium-card"><div class="premium-card-title">Recently Watched</div><div id="premium-recent-all"></div></div>
       </div>`);
 
     const movies=createTab('tab-movies', `
       <div class="premium-lang-tabs" id="premium-lang-tabs">
         <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Tamil</button>
+        <button data-lang="hi" onclick="selectPremiumMovieLang('hi')">Hindi</button>
         <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
       </div>
       <div id="movie-host"></div>`);
@@ -2430,13 +2423,13 @@ if ('caches' in window) {
       <div class="settings-grid">
         <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Use the same Sync PIN on each device. Your Firebase URL is already inside the code.</p><div id="settings-sync-slot"></div></div>
         <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
-        <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam Servers</button></div></div>
-        <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
+        <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam/Tamil Servers</button><button onclick="testAllServers('hi')">Test Hindi Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam/Tamil Servers</button></div></div>
+        <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam/Tamil Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam/Tamil Watchlist</button><button onclick="clearRecent('hi')">Clear Hindi Recent</button><button onclick="clearWatchlist('hi')">Clear Hindi Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
         <div class="settings-card"><h3>Advanced Tools</h3><p>Einthusan/search helpers and destructive buttons are hidden from the main page for a cleaner premium feel.</p><div class="settings-actions"><button onclick="toggleAdvancedTools()">Show / Hide Advanced Tools</button></div></div>
       </div>`);
 
     const host=document.getElementById('movie-host');
-    ['ta','en'].forEach(lang=>{
+    MOVIE_LANGS.forEach(lang=>{
       const section=document.getElementById('tab-'+lang);
       if(section && host && section.parentElement!==host){
         section.classList.add('premium-lang-section');
@@ -2444,7 +2437,7 @@ if ('caches' in window) {
         host.appendChild(section);
       }
     });
-    document.getElementById('tab-hi')?.remove();
+    
     const sync=document.getElementById('cloud-sync-box');
     const syncSlot=document.getElementById('settings-sync-slot');
     if(sync && syncSlot){ sync.classList.remove('collapsed'); syncSlot.appendChild(sync); }
@@ -2465,7 +2458,7 @@ if ('caches' in window) {
   window.selectPremiumMovieLang=function(lang, silent){
     premiumMovieLang=lang; localStorage.setItem('premium_movie_lang',lang);
     document.querySelectorAll('#premium-lang-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
-    ['ta','en'].forEach(l=>{
+    MOVIE_LANGS.forEach(l=>{
       const sec=document.getElementById('tab-'+l);
       if(sec) sec.classList.toggle('premium-visible', l===lang);
     });
@@ -2473,7 +2466,7 @@ if ('caches' in window) {
   }
 
   window.switchTab=function(t){
-    if(['en','ta','hi'].includes(t)){ premiumMovieLang = (t==='hi'?'ta':t); t='movies'; }
+    if(['en','ta','hi'].includes(t)){ premiumMovieLang = t; t='movies'; }
     document.querySelectorAll('.tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
     document.querySelectorAll('.main > .tab-content').forEach(el=>el.classList.toggle('active',el.id==='tab-'+t));
     if(t==='movies') selectPremiumMovieLang(premiumMovieLang, true);
@@ -2489,17 +2482,30 @@ if ('caches' in window) {
     const cont=document.getElementById('premium-continue');
     const watch=document.getElementById('premium-watch-ta');
     const recent=document.getElementById('premium-recent-all');
+    const langs=['ta','hi','en'];
+
     if(cont){
-      const first=(getR?.('ta')?.[0]) || (getR?.('en')?.[0]);
-      cont.innerHTML = first ? `<div class="premium-mini-grid">${itemMini(first, getR('ta')[0]? 'ta':'en', 0, 'recent')}</div>` : `<div class="premium-empty">Nothing saved yet. Start a movie and it will appear here.</div>`;
+      const combinedRecent=langs
+        .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
+        .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0));
+      const first=combinedRecent[0];
+      cont.innerHTML = first ? `<div class="premium-mini-grid">${itemMini(first.m, first.lang, first.i, 'recent')}</div>` : `<div class="premium-empty">Nothing saved yet. Start a movie and it will appear here.</div>`;
     }
+
     if(watch){
-      const a=(getW?.('ta')||[]).slice(0,6);
-      watch.innerHTML = a.length ? `<div class="premium-mini-grid">${a.map((m,i)=>itemMini(m,'ta',i,'watch')).join('')}</div>` : `<div class="premium-empty">Search a Malayalam title and tap ＋ Watchlist.</div>`;
+      const combinedWatch=langs
+        .flatMap(lang => (getW?.(lang)||[]).map((m,i)=>({m,i,lang})))
+        .sort((a,b)=>(b.m.addedAt||0)-(a.m.addedAt||0))
+        .slice(0,24);
+      watch.innerHTML = combinedWatch.length ? `<div class="premium-mini-grid">${combinedWatch.map(x=>itemMini(x.m,x.lang,x.i,'watch')).join('')}</div>` : `<div class="premium-empty">Search any title and tap ＋ Watchlist. Your watchlist can store up to 100 movies or series.</div>`;
     }
+
     if(recent){
-      const combined=[...(getR?.('ta')||[]).map((m,i)=>({m,i,lang:'ta'})),...(getR?.('en')||[]).map((m,i)=>({m,i,lang:'en'}))].slice(0,6);
-      recent.innerHTML = combined.length ? `<div class="premium-mini-grid">${combined.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>` : `<div class="premium-empty">Recently watched items will appear here.</div>`;
+      const combined=langs
+        .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
+        .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0))
+        .slice(0,24);
+      recent.innerHTML = combined.length ? `<div class="premium-mini-grid">${combined.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>` : `<div class="premium-empty">Recently watched items from every language will appear here.</div>`;
     }
   }
 
@@ -2555,7 +2561,7 @@ if ('caches' in window) {
   function applyPremiumCleanMode(){
     const on=localStorage.getItem('premium_clean_mode')==='on';
     const risky=new Set(['vidsrcme','vidsrcsu','2embed','vsembed','multiembed']);
-    ['ta','en'].forEach(lang=>{
+    MOVIE_LANGS.forEach(lang=>{
       try{
         const cfg=getSrvConfig(lang);
         cfg.forEach(s=>{ if(risky.has(s.key)) s.hidden=on; });
