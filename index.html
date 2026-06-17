@@ -479,6 +479,92 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   .srv-btn-pill{padding:4px 10px;font-size:11px;}
   .srv-bar-actions{margin-left:0;width:100%;}
 }
+
+
+/* ========== PREMIUM CLEAN LAYOUT PATCH ========== */
+#api-banner{display:none!important;}
+#cloud-sync-box{margin:0!important;}
+.main{max-width:1320px;margin:0 auto;}
+.tabs{position:sticky;top:0;z-index:150;background:rgba(9,9,14,.92);backdrop-filter:blur(14px);border:1px solid rgba(201,168,76,.10);border-radius:18px;padding:8px;margin:18px 0 24px;box-shadow:0 10px 40px rgba(0,0,0,.28);}
+.tab{border-radius:12px;border-bottom:none;margin:0;padding:11px 18px;}
+.tab.active{background:linear-gradient(135deg,rgba(201,168,76,.18),rgba(201,168,76,.06));border-bottom:none;box-shadow:inset 0 0 0 1px rgba(201,168,76,.20);}
+.premium-hero{position:relative;overflow:hidden;border:1px solid rgba(201,168,76,.18);border-radius:24px;padding:30px;margin-bottom:22px;background:radial-gradient(circle at 20% 0%,rgba(201,168,76,.18),transparent 38%),linear-gradient(135deg,rgba(17,17,24,.98),rgba(12,12,18,.96));box-shadow:0 24px 70px rgba(0,0,0,.35);}
+.premium-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(255,255,255,.035),transparent);pointer-events:none;}
+.premium-kicker{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.premium-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,4vw,3.7rem);line-height:1.05;color:var(--gold2);text-shadow:0 12px 38px rgba(0,0,0,.7);max-width:850px;}
+.premium-sub{margin-top:12px;color:var(--muted);font-size:14px;max-width:760px;line-height:1.7;}
+.premium-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+.premium-primary,.premium-secondary{border-radius:999px;padding:10px 18px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;cursor:pointer;}
+.premium-primary{border:none;background:linear-gradient(135deg,var(--gold3),var(--gold));color:#08080c;font-weight:700;}
+.premium-secondary{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);}
+.premium-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:22px;}
+.premium-card{background:var(--surface);border:1px solid rgba(201,168,76,.16);border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.22);}
+.premium-card-title{font-family:'Cinzel',serif;color:var(--gold);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+.premium-mini-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;}
+.premium-mini{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s,border-color .18s;}
+.premium-mini:hover{transform:translateY(-3px);border-color:rgba(201,168,76,.45);}
+.premium-mini img{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--surface3);display:block;}
+.premium-mini div{font-size:11px;padding:7px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.premium-empty{font-size:12px;color:var(--muted);line-height:1.55;}
+.premium-lang-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.premium-lang-tabs button{background:var(--surface);border:1px solid var(--border);border-radius:999px;color:var(--muted);padding:8px 14px;font-size:12px;cursor:pointer;}
+.premium-lang-tabs button.active{color:var(--gold2);border-color:rgba(201,168,76,.45);background:rgba(201,168,76,.10);}
+#movie-host>.tab-content{display:none!important;}
+#movie-host>.tab-content.premium-visible{display:block!important;}
+#movie-host .sec-header .clear-btn,.premium-hide-clear .clear-btn{display:none!important;}
+#movie-host .srv-bar-test,#movie-host .srv-bar-manage{display:none!important;}
+#movie-host .srv-bar-actions{display:none!important;}
+#movie-host .ein-helper{display:none!important;}
+#movie-host .watchlist-sec,#movie-host .search-sec,#movie-host .series-info-panel,#movie-host .now-bar,#movie-host .player-outer,#movie-host .srv-btn-bar{box-shadow:0 12px 38px rgba(0,0,0,.22);}
+.premium-detail{display:none;position:relative;overflow:hidden;border:1px solid rgba(201,168,76,.20);border-radius:20px;margin-bottom:18px;background:linear-gradient(135deg,rgba(26,26,38,.96),rgba(10,10,15,.96));min-height:220px;}
+.premium-detail.on{display:flex;}
+.premium-detail-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.20;filter:blur(1px);}
+.premium-detail-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,9,14,.96),rgba(9,9,14,.72),rgba(9,9,14,.94));}
+.premium-detail-content{position:relative;z-index:1;display:flex;gap:18px;padding:20px;width:100%;align-items:flex-start;}
+.premium-detail-poster{width:120px;aspect-ratio:2/3;border-radius:12px;object-fit:cover;background:var(--surface3);box-shadow:0 18px 40px rgba(0,0,0,.45);flex-shrink:0;}
+.premium-detail-title{font-family:'Cinzel',serif;color:var(--gold2);font-size:1.45rem;margin-bottom:6px;}
+.premium-detail-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.premium-detail-overview{font-size:13px;color:#c9c4bb;line-height:1.65;max-width:800px;}
+.premium-detail-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.premium-detail-buttons button{border-radius:999px;padding:8px 15px;font-size:12px;cursor:pointer;}
+.premium-play{border:none;background:linear-gradient(135deg,var(--gold3),var(--gold));color:#09090e;font-weight:700;}
+.premium-watch{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);}
+.sug-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.sug-add-watch{border:1px solid rgba(201,168,76,.25);background:rgba(201,168,76,.08);color:var(--gold2);border-radius:999px;padding:5px 9px;font-size:10px;cursor:pointer;white-space:nowrap;}
+.sug-item.loading-card{height:72px;background:linear-gradient(90deg,var(--surface2),var(--surface3),var(--surface2));background-size:220% 100%;animation:premiumShimmer 1.15s linear infinite;border-radius:10px;margin:8px;}
+@keyframes premiumShimmer{to{background-position:-220% 0;}}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.settings-card{background:var(--surface);border:1px solid rgba(201,168,76,.16);border-radius:18px;padding:18px;}
+.settings-card h3{font-family:'Cinzel',serif;color:var(--gold);font-size:14px;letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase;}
+.settings-card p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.settings-actions button{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--text);font-size:12px;cursor:pointer;}
+.settings-actions button:hover{border-color:rgba(201,168,76,.45);color:var(--gold);}
+.premium-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;}
+.premium-toggle button{border:none;border-radius:999px;padding:7px 12px;background:var(--gold3);color:var(--gold2);cursor:pointer;}
+@media(max-width:640px){.premium-detail-content{flex-direction:column}.premium-detail-poster{width:96px}.premium-grid{grid-template-columns:1fr}.premium-hero{padding:22px}.tabs{overflow-x:auto;flex-wrap:nowrap}.tab{white-space:nowrap}}
+
+
+
+/* ========== SEARCH DROPDOWN VISIBILITY FIX ========== */
+.search-sec,
+.srch-wrap{
+  overflow:visible!important;
+}
+.srch-wrap{
+  position:relative!important;
+  z-index:5000!important;
+}
+#sug-en,#sug-hi,#sug-ta,#sug-yt{
+  display:block;
+  z-index:999999!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.75)!important;
+}
+#movie-host .search-sec{
+  position:relative!important;
+  z-index:50!important;
+}
+
 </style>
 </head>
 <body>
@@ -2104,8 +2190,12 @@ function replayR(lang,idx){
 </script>
 
 <script>
+/* Removed old service worker registration. It can keep serving stale broken code on GitHub Pages. */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.getRegistrations?.().then(regs => regs.forEach(reg => reg.unregister())).catch(() => {});
+}
+if ('caches' in window) {
+  caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(() => {});
 }
 </script>
 
@@ -2267,5 +2357,354 @@ if ('serviceWorker' in navigator) {
   }, 1000);
 })();
 </script>
+
+<script>
+/* ========== PREMIUM APP SHELL PATCH ========== */
+(function(){
+  const MOVIE_LANGS = ['ta','en'];
+  let premiumMovieLang = localStorage.getItem('premium_movie_lang') || 'ta';
+  if (!MOVIE_LANGS.includes(premiumMovieLang)) premiumMovieLang='ta';
+  const oldSwitchTab = window.switchTab;
+  const oldRenderAllRecents = window.renderAllRecents;
+  const oldAddRecent = window.addRecent;
+  const oldPickMovie = window.pickMovie;
+  const oldDoSearch = window.doSearch;
+
+  function labelFor(lang){ return lang==='ta'?'Malayalam / Tamil':lang==='en'?'English':lang==='yt'?'YouTube':'Movies'; }
+  function safePoster(m){ return m?.poster || ''; }
+  function safeText(s){ return (window.escHtml ? escHtml(String(s||'')) : String(s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))); }
+
+  function createTab(id, html){
+    let el=document.getElementById(id);
+    if(!el){ el=document.createElement('div'); el.id=id; el.className='tab-content'; document.querySelector('.main').appendChild(el); }
+    el.innerHTML=html;
+    return el;
+  }
+
+  function setupShell(){
+    document.body.classList.add('premium-hide-clear');
+    document.getElementById('api-banner')?.remove();
+    const tabs=document.querySelector('.tabs');
+    if(tabs){
+      tabs.innerHTML=`
+        <div class="tab active" data-tab="home" onclick="switchTab('home')">⌂ Home</div>
+        <div class="tab" data-tab="movies" onclick="switchTab('movies')">🎬 Movies</div>
+        <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
+        <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>`;
+    }
+
+    const home=createTab('tab-home', `
+      <section class="premium-hero">
+        <div class="premium-kicker">Personal cinema dashboard</div>
+        <div class="premium-title">Joel's Movie Kingdom</div>
+        <div class="premium-sub">Search, resume, and keep your Malayalam-first watchlist synced across your phone, laptop, and TV.</div>
+        <div class="premium-actions">
+          <button class="premium-primary" onclick="switchTab('movies')">Start Watching</button>
+          <button class="premium-secondary" onclick="switchTab('settings')">Sync / Settings</button>
+        </div>
+      </section>
+      <div class="premium-grid">
+        <div class="premium-card"><div class="premium-card-title">Continue Watching <button class="premium-secondary" onclick="switchTab('movies')" style="padding:6px 10px;font-size:10px;">Open</button></div><div id="premium-continue"></div></div>
+        <div class="premium-card"><div class="premium-card-title">Malayalam Watchlist</div><div id="premium-watch-ta"></div></div>
+        <div class="premium-card"><div class="premium-card-title">Recently Watched</div><div id="premium-recent-all"></div></div>
+      </div>`);
+
+    const movies=createTab('tab-movies', `
+      <div class="premium-lang-tabs" id="premium-lang-tabs">
+        <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Tamil</button>
+        <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
+      </div>
+      <div id="movie-host"></div>`);
+
+    const settings=createTab('tab-settings', `
+      <section class="premium-hero" style="padding:22px;">
+        <div class="premium-kicker">Settings</div>
+        <div class="premium-title" style="font-size:2rem;">Clean, synced, and simple</div>
+        <div class="premium-sub">Advanced tools live here so the main watching page stays clean.</div>
+      </section>
+      <div class="settings-grid">
+        <div class="settings-card" id="settings-sync-card"><h3>Cloud Sync</h3><p>Use the same Sync PIN on each device. Your Firebase URL is already inside the code.</p><div id="settings-sync-slot"></div></div>
+        <div class="settings-card"><h3>Clean Mode</h3><p>Hide the riskier/unknown servers by default. You can turn them back on anytime.</p><div class="premium-toggle"><span id="clean-mode-label">Clean Mode</span><button onclick="togglePremiumCleanMode()" id="clean-mode-btn">Toggle</button></div></div>
+        <div class="settings-card"><h3>Server Tools</h3><p>Server testing and management were moved out of the player area to reduce clutter.</p><div class="settings-actions"><button onclick="testAllServers('ta')">Test Malayalam Servers</button><button onclick="testAllServers('en')">Test English Servers</button><button onclick="resetServers('ta')">Reset Malayalam Servers</button></div></div>
+        <div class="settings-card"><h3>Data Cleanup</h3><p>Use these only when you intentionally want to clear saved history or watchlist data.</p><div class="settings-actions"><button onclick="clearRecent('ta')">Clear Malayalam Recent</button><button onclick="clearWatchlist('ta')">Clear Malayalam Watchlist</button><button onclick="clearRecent('en')">Clear English Recent</button></div></div>
+        <div class="settings-card"><h3>Advanced Tools</h3><p>Einthusan/search helpers and destructive buttons are hidden from the main page for a cleaner premium feel.</p><div class="settings-actions"><button onclick="toggleAdvancedTools()">Show / Hide Advanced Tools</button></div></div>
+      </div>`);
+
+    const host=document.getElementById('movie-host');
+    ['ta','en'].forEach(lang=>{
+      const section=document.getElementById('tab-'+lang);
+      if(section && host && section.parentElement!==host){
+        section.classList.add('premium-lang-section');
+        ensureDetailBox(lang, section);
+        host.appendChild(section);
+      }
+    });
+    document.getElementById('tab-hi')?.remove();
+    const sync=document.getElementById('cloud-sync-box');
+    const syncSlot=document.getElementById('settings-sync-slot');
+    if(sync && syncSlot){ sync.classList.remove('collapsed'); syncSlot.appendChild(sync); }
+    updateCleanModeLabel();
+    selectPremiumMovieLang(premiumMovieLang, true);
+    switchTab('home');
+  }
+
+  function ensureDetailBox(lang, section){
+    if(document.getElementById('premium-detail-'+lang)) return;
+    const detail=document.createElement('div');
+    detail.id='premium-detail-'+lang;
+    detail.className='premium-detail';
+    const search=section.querySelector('.search-sec');
+    if(search) search.parentElement.insertBefore(detail, search);
+  }
+
+  window.selectPremiumMovieLang=function(lang, silent){
+    premiumMovieLang=lang; localStorage.setItem('premium_movie_lang',lang);
+    document.querySelectorAll('#premium-lang-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
+    ['ta','en'].forEach(l=>{
+      const sec=document.getElementById('tab-'+l);
+      if(sec) sec.classList.toggle('premium-visible', l===lang);
+    });
+    if(!silent) window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  window.switchTab=function(t){
+    if(['en','ta','hi'].includes(t)){ premiumMovieLang = (t==='hi'?'ta':t); t='movies'; }
+    document.querySelectorAll('.tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
+    document.querySelectorAll('.main > .tab-content').forEach(el=>el.classList.toggle('active',el.id==='tab-'+t));
+    if(t==='movies') selectPremiumMovieLang(premiumMovieLang, true);
+    if(t==='home') renderPremiumHome();
+  };
+
+  function itemMini(m, lang, i, source){
+    const fn = source==='watch' ? `playFromWatchlist('${lang}',${i})` : `replayR('${lang}',${i})`;
+    return `<div class="premium-mini" onclick="switchTab('movies');selectPremiumMovieLang('${lang}',true);${fn}"><img src="${safePoster(m)}" alt="${safeText(m.title)}" onerror="this.style.display='none'"><div>${safeText(m.title)}</div></div>`;
+  }
+
+  function renderPremiumHome(){
+    const cont=document.getElementById('premium-continue');
+    const watch=document.getElementById('premium-watch-ta');
+    const recent=document.getElementById('premium-recent-all');
+    if(cont){
+      const first=(getR?.('ta')?.[0]) || (getR?.('en')?.[0]);
+      cont.innerHTML = first ? `<div class="premium-mini-grid">${itemMini(first, getR('ta')[0]? 'ta':'en', 0, 'recent')}</div>` : `<div class="premium-empty">Nothing saved yet. Start a movie and it will appear here.</div>`;
+    }
+    if(watch){
+      const a=(getW?.('ta')||[]).slice(0,6);
+      watch.innerHTML = a.length ? `<div class="premium-mini-grid">${a.map((m,i)=>itemMini(m,'ta',i,'watch')).join('')}</div>` : `<div class="premium-empty">Search a Malayalam title and tap ＋ Watchlist.</div>`;
+    }
+    if(recent){
+      const combined=[...(getR?.('ta')||[]).map((m,i)=>({m,i,lang:'ta'})),...(getR?.('en')||[]).map((m,i)=>({m,i,lang:'en'}))].slice(0,6);
+      recent.innerHTML = combined.length ? `<div class="premium-mini-grid">${combined.map(x=>itemMini(x.m,x.lang,x.i,'recent')).join('')}</div>` : `<div class="premium-empty">Recently watched items will appear here.</div>`;
+    }
+  }
+
+  function renderPremiumDetail(lang, movie, rawItem){
+    const box=document.getElementById('premium-detail-'+lang); if(!box || !movie) return;
+    const backdrop=rawItem?.backdrop_path ? `https://image.tmdb.org/t/p/w780${rawItem.backdrop_path}` : '';
+    const poster=movie.poster || (rawItem?.poster_path ? `https://image.tmdb.org/t/p/w342${rawItem.poster_path}` : '');
+    const overview=rawItem?.overview || 'No description available yet.';
+    box.classList.add('on');
+    box.innerHTML=`
+      <div class="premium-detail-bg" style="background-image:url('${backdrop}')"></div><div class="premium-detail-shade"></div>
+      <div class="premium-detail-content">
+        <img class="premium-detail-poster" src="${poster}" alt="${safeText(movie.title)}" onerror="this.style.display='none'">
+        <div>
+          <div class="premium-kicker">Selected ${movie.type==='tv'?'Series':'Movie'}</div>
+          <div class="premium-detail-title">${safeText(movie.title)}</div>
+          <div class="premium-detail-meta">${safeText(movie.year||'')} ${movie.rating?' · ⭐ '+safeText(movie.rating):''} · ${movie.type==='tv'?'Series':'Movie'}</div>
+          <div class="premium-detail-overview">${safeText(overview)}</div>
+          <div class="premium-detail-buttons"><button class="premium-play" onclick="playMovie('${lang}')">▶ Play</button><button class="premium-watch" onclick="addToWatchlist('${lang}', selMovie['${lang}'])">＋ Add to Watchlist</button></div>
+        </div>
+      </div>`;
+  }
+
+  window.pickMovie=async function(item,lang){
+    await oldPickMovie(item,lang);
+    renderPremiumDetail(lang, selMovie[lang], item);
+  };
+
+  window.doSearch=async function(q,lang){
+    const box=document.getElementById('sug-'+lang);
+    if(box) box.innerHTML='<div class="sug-item loading-card"></div><div class="sug-item loading-card"></div>';
+    return oldDoSearch(q,lang);
+  };
+
+  window.addRecent=async function(lang,movie){
+    const res=await oldAddRecent(lang,movie);
+    renderPremiumHome();
+    return res;
+  };
+
+  window.renderAllRecents=function(){
+    oldRenderAllRecents();
+    setTimeout(renderPremiumHome, 50);
+  };
+
+  window.togglePremiumCleanMode=function(){
+    const on=localStorage.getItem('premium_clean_mode')!=='on';
+    localStorage.setItem('premium_clean_mode', on?'on':'off');
+    applyPremiumCleanMode();
+    updateCleanModeLabel();
+  };
+
+  function applyPremiumCleanMode(){
+    const on=localStorage.getItem('premium_clean_mode')==='on';
+    const risky=new Set(['vidsrcme','vidsrcsu','2embed','vsembed','multiembed']);
+    ['ta','en'].forEach(lang=>{
+      try{
+        const cfg=getSrvConfig(lang);
+        cfg.forEach(s=>{ if(risky.has(s.key)) s.hidden=on; });
+        setSrvConfig(lang,cfg); renderSrvPills(lang); renderSrvList(lang);
+      }catch(e){}
+    });
+  }
+  function updateCleanModeLabel(){
+    const on=localStorage.getItem('premium_clean_mode')==='on';
+    const label=document.getElementById('clean-mode-label');
+    const btn=document.getElementById('clean-mode-btn');
+    if(label) label.textContent=on?'Clean Mode: On':'Clean Mode: Off';
+    if(btn) btn.textContent=on?'Turn Off':'Turn On';
+  }
+  window.toggleAdvancedTools=function(){
+    document.body.classList.toggle('show-advanced-tools');
+    const show=document.body.classList.contains('show-advanced-tools');
+    document.querySelectorAll('.ein-helper').forEach(el=>el.style.setProperty('display', show?'block':'none','important'));
+    document.querySelectorAll('#movie-host .srv-bar-actions').forEach(el=>el.style.setProperty('display', show?'flex':'none','important'));
+  };
+
+  window.addEventListener('load', function(){
+    setupShell();
+    applyPremiumCleanMode();
+    renderPremiumHome();
+  });
+})();
+</script>
+
+
+<script>
+/* ========== ROBUST SEARCH FIX ========== */
+(function(){
+  function htmlEscape(value){
+    if (window.escHtml) return window.escHtml(String(value || ''));
+    return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+  }
+
+  function getSearchLangs(){
+    return ['en','hi','ta','yt'].filter(lang => document.getElementById('srch-' + lang));
+  }
+
+  function showSearchMessage(lang, message, color){
+    const box = document.getElementById('sug-' + lang);
+    if (!box) return;
+    box.innerHTML = `<div class="sug-item" style="font-size:12px;color:${color || 'var(--muted)'};">${message}</div>`;
+  }
+
+  async function tmdbSearchFixed(q, lang){
+    const box = document.getElementById('sug-' + lang);
+    if (!box) return;
+
+    const key = (window.TMDB_KEY || '').trim();
+    if (!key) {
+      showSearchMessage(lang, 'TMDB key missing inside code.', '#f07a7c');
+      return;
+    }
+
+    box.innerHTML = '<div class="sug-item"><span class="spinner"></span><span style="font-size:12px;color:var(--muted);">Searching…</span></div>';
+
+    try {
+      const url = `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(q)}&include_adult=false`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok || data.success === false) {
+        showSearchMessage(lang, `TMDB error: ${htmlEscape(data.status_message || 'Search failed')}`, '#f07a7c');
+        return;
+      }
+
+      const items = (data.results || [])
+        .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+        .slice(0, 10);
+
+      if (!items.length) {
+        showSearchMessage(lang, 'No results found.', 'var(--muted)');
+        return;
+      }
+
+      box.innerHTML = '';
+      items.forEach(item => {
+        const isMovie = item.media_type === 'movie';
+        const title = item.title || item.name || 'Untitled';
+        const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
+
+        const row = document.createElement('div');
+        row.className = 'sug-item';
+        row.innerHTML = `
+          ${poster ? `<img class="sug-poster" src="${poster}" alt="" loading="lazy">` : `<div class="sug-no-img">🎬</div>`}
+          <div class="sug-info">
+            <div class="sug-title">${htmlEscape(title)}</div>
+            <div class="sug-meta">${htmlEscape(year)}${item.original_language ? ' · ' + htmlEscape(item.original_language.toUpperCase()) : ''}</div>
+          </div>
+          <div class="sug-actions">
+            <button type="button" class="sug-add-watch">＋ Watchlist</button>
+            <span class="sug-badge ${isMovie ? 'badge-movie' : 'badge-series'}">${isMovie ? 'Movie' : 'Series'}</span>
+          </div>`;
+
+        row.addEventListener('click', () => window.pickMovie && window.pickMovie(item, lang));
+        const addBtn = row.querySelector('.sug-add-watch');
+        addBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (window.addSearchItemToWatchlist) window.addSearchItemToWatchlist(e, item, lang);
+        });
+        box.appendChild(row);
+      });
+    } catch (err) {
+      showSearchMessage(lang, 'Search failed. Check internet connection, TMDB key, or browser console.', '#f07a7c');
+      console.error('[Movie Kingdom Search]', err);
+    }
+  }
+
+  window.doSearch = tmdbSearchFixed;
+
+  function bindSearchInputs(){
+    getSearchLangs().forEach(lang => {
+      const input = document.getElementById('srch-' + lang);
+      const box = document.getElementById('sug-' + lang);
+      if (!input || !box || input.dataset.searchFixed === '1') return;
+      input.dataset.searchFixed = '1';
+
+      input.addEventListener('input', () => {
+        clearTimeout(window.timers?.[lang]);
+        const q = input.value.trim();
+        if (q.length < 2) {
+          box.innerHTML = '';
+          return;
+        }
+        window.timers = window.timers || {};
+        window.timers[lang] = setTimeout(() => tmdbSearchFixed(q, lang), 250);
+      });
+
+      input.addEventListener('focus', () => {
+        const q = input.value.trim();
+        if (q.length >= 2 && !box.innerHTML.trim()) tmdbSearchFixed(q, lang);
+      });
+    });
+  }
+
+  document.addEventListener('click', e => {
+    getSearchLangs().forEach(lang => {
+      const input = document.getElementById('srch-' + lang);
+      const box = document.getElementById('sug-' + lang);
+      if (!input || !box) return;
+      if (!input.contains(e.target) && !box.contains(e.target)) box.innerHTML = '';
+    });
+  });
+
+  bindSearchInputs();
+  window.addEventListener('load', bindSearchInputs);
+  setTimeout(bindSearchInputs, 800);
+})();
+</script>
+
 </body>
 </html>
