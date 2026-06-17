@@ -31,34 +31,6 @@ html{scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
   min-height:100vh;overflow-x:hidden;}
 
-/* INTRO */
-#intro{position:fixed;inset:0;z-index:9999;background:#000;
-  display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.door-left,.door-right{
-  position:absolute;top:0;width:50%;height:100%;background:#0a0a0e;
-  transition:transform 1.4s cubic-bezier(.7,0,.2,1);
-  display:flex;align-items:center;will-change:transform;
-}
-.door-left{left:0;justify-content:flex-end;border-right:1px solid rgba(201,168,76,0.3);}
-.door-right{right:0;justify-content:flex-start;border-left:1px solid rgba(201,168,76,0.3);}
-.door-ornament{width:80px;height:80px;opacity:0.15;flex-shrink:0;
-  background:radial-gradient(circle,rgba(201,168,76,0.6) 0%,transparent 70%);}
-#intro.open .door-left{transform:translateX(-100%);}
-#intro.open .door-right{transform:translateX(100%);}
-.intro-title{position:absolute;text-align:center;z-index:2;pointer-events:none;
-  animation:titleGlow 2s ease-in-out infinite alternate;}
-.intro-crown{font-size:3rem;margin-bottom:8px;opacity:0.85;}
-.intro-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.6rem,5vw,3.4rem);
-  color:var(--gold2);text-shadow:0 0 40px rgba(201,168,76,0.8),0 0 80px rgba(201,168,76,0.3);
-  letter-spacing:4px;line-height:1.2;}
-.intro-sub{font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:6px;
-  color:rgba(201,168,76,0.6);margin-top:10px;text-transform:uppercase;}
-@keyframes titleGlow{
-  from{text-shadow:0 0 30px rgba(201,168,76,0.6),0 0 60px rgba(201,168,76,0.2);}
-  to{text-shadow:0 0 60px rgba(201,168,76,1),0 0 100px rgba(201,168,76,0.5);}
-}
-#intro.fade-out{opacity:0;transition:opacity 0.8s ease;pointer-events:none;}
-
 /* SITE HEADER */
 #site-header{padding:20px 32px 0;display:flex;align-items:center;
   justify-content:space-between;flex-wrap:wrap;gap:12px;}
@@ -135,7 +107,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
   border:1px solid var(--border);padding:4px 12px;border-radius:6px;
   cursor:pointer;transition:color .2s,border-color .2s;}
 .clear-btn:hover{color:var(--crimson);border-color:var(--crimson);}
-#recent-grid-en,#recent-grid-hi,#recent-grid-ml,#recent-grid-ta,#recent-grid-yt{
+#recent-grid-en,#recent-grid-hi,#recent-grid-ta,#recent-grid-yt{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:24px;}
 .no-recent{color:var(--muted);font-size:13px;padding:12px 0 24px;text-align:center;}
 .rc{background:var(--surface);border-radius:10px;overflow:hidden;
@@ -162,7 +134,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
   border-radius:var(--radius);padding:11px 16px;color:var(--text);
   font-family:'DM Sans',sans-serif;font-size:14px;transition:border-color .2s;}
 .srch-wrap input:focus{outline:none;border-color:var(--gold);}
-#sug-en,#sug-hi,#sug-ml,#sug-ta,#sug-yt{
+#sug-en,#sug-hi,#sug-ta,#sug-yt{
   position:absolute;top:calc(100% + 4px);left:0;right:0;
   background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
   z-index:100;max-height:320px;overflow-y:auto;}
@@ -511,17 +483,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 </head>
 <body>
 
-<!-- INTRO -->
-<div id="intro">
-  <div class="door-left"><div class="door-ornament"></div></div>
-  <div class="door-right"><div class="door-ornament"></div></div>
-  <div class="intro-title">
-    <div class="intro-crown">👑</div>
-    <div class="intro-name">Joel's<br>Movie Kingdom</div>
-    <div class="intro-sub">Your Personal Cinema</div>
-  </div>
-</div>
-
 <!-- SITE HEADER -->
 <div id="site-header">
   <div class="site-logo">👑 Joel's Movie Kingdom</div>
@@ -582,9 +543,8 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 <div class="main">
   <div class="tabs">
     <div class="tab active" data-tab="en" onclick="switchTab('en')">🇺🇸 English</div>
-    <div class="tab" data-tab="ml" onclick="switchTab('ml')">🇮🇳 Malayalam</div>
     <div class="tab" data-tab="hi" onclick="switchTab('hi')">🇮🇳 Hindi</div>
-    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Tamil</div>
+    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Malayalam / Tamil</div>
     <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
   </div>
 
@@ -738,96 +698,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     </div>
   </div>
 
-  <!-- ========== MALAYALAM TAB ========== -->
-  <div class="tab-content" id="tab-ml">
-    <div class="sec-header">
-      <div class="sec-title">Recently Watched</div>
-      <button class="clear-btn" onclick="clearRecent('ml')">Clear</button>
-    </div>
-    <div id="recent-grid-ml"></div>
-    <div class="no-recent" id="no-recent-ml">Nothing watched yet.</div>
-    <div class="watchlist-sec">
-      <div class="sec-header">
-        <div class="sec-title">My Watchlist</div>
-        <button class="clear-btn" onclick="clearWatchlist('ml')">Clear</button>
-      </div>
-      <div class="watch-grid" id="watch-grid-ml"></div>
-    </div>
-    <div class="search-sec">
-      <div class="section-label">Search Malayalam Movie or Series</div>
-      <div class="search-row">
-        <div class="srch-wrap">
-          <input type="text" id="srch-ml" placeholder="Type title…" autocomplete="off" />
-          <div id="sug-ml"></div>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="series-ctrl" id="sc-ml">
-          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
-            <input type="number" class="num-in" id="s-ml" value="1" min="1" /></div>
-          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
-            <input type="number" class="num-in" id="e-ml" value="1" min="1" /></div>
-        </div>
-        <button class="play-btn" onclick="playMovie('ml')">▶ Play</button>
-      </div>
-    </div>
-    <div class="now-bar" id="nb-ml">
-      <img class="np-img" id="npi-ml" src="" alt="" />
-      <div class="np-det"><div class="np-title" id="npt-ml"></div><div class="np-meta" id="npm-ml"></div></div>
-      <div class="np-star" id="nps-ml"></div>
-    </div>
-
-    <!-- Server button bar above player -->
-    <div class="srv-btn-bar" id="srv-btn-bar-ml">
-      <span class="srv-bar-label">Server:</span>
-      <div id="srv-pills-ml" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-      <div class="srv-bar-sep"></div>
-      <div class="srv-bar-actions">
-        <button class="srv-bar-test" onclick="testAllServers('ml')">⚡ Test</button>
-        <button class="srv-bar-manage" onclick="toggleSrvPanel('ml')">⚙ Manage</button>
-      </div>
-    </div>
-
-    <div class="player-outer" id="po-ml">
-      <div class="player-stage default" id="ps-ml">
-        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-ml" allowfullscreen referrerpolicy="origin" allow="autoplay; fullscreen; encrypted-media"></iframe></div>
-      </div>
-      <div class="player-controls">
-        <div class="view-btns">
-          <button class="vbtn active" onclick="setView('ml','default',this)">Default</button>
-          <button class="vbtn" onclick="setView('ml','theatre',this)">Theatre</button>
-          <button class="vbtn" onclick="fsPlayer('ml')">⛶ Fullscreen</button>
-        </div>
-      </div>
-      <div class="srv-panel" id="srv-panel-ml">
-        <div class="srv-panel-title">Server Manager</div>
-        <div class="srv-list" id="srv-list-ml"></div>
-        <div class="add-srv-row">
-          <input class="add-srv-inp" id="add-srv-name-ml" placeholder="Server name" />
-          <input class="add-srv-inp" id="add-srv-movie-ml" placeholder="Movie URL (use {id})" />
-          <input class="add-srv-inp" id="add-srv-tv-ml" placeholder="TV URL (use {id},{s},{e})" />
-          <button class="add-srv-btn" onclick="addCustomServer('ml')">＋ Add</button>
-        </div>
-        <div class="srv-panel-actions" style="margin-top:12px;">
-          <button class="srv-act-btn" onclick="testAllServers('ml')">⚡ Test All Servers</button>
-          <button class="srv-act-btn secondary" onclick="resetServers('ml')">↺ Reset to Defaults</button>
-          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('ml')">🗑 Remove Red Servers</button>
-        </div>
-      </div>
-    </div>
-    <div class="ein-helper">
-      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.</p>
-      <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-ml" href="https://einthusan.tv/movie/results/?find=Popularity&lang=malayalam&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
-      </div>
-      <div class="ein-helper-row" style="margin-top:12px;">
-        <input type="text" id="ein-url-ml" placeholder="https://einthusan.tv/movie/watch/…" />
-        <button class="ein-dl-btn" onclick="openSaveTheVideo('ml')">⬇ Get MP4</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ========== HINDI TAB ========== -->
   <div class="tab-content" id="tab-hi">
     <div class="sec-header">
@@ -918,7 +788,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     </div>
   </div>
 
-  <!-- ========== TAMIL TAB ========== -->
+  <!-- ========== MALAYALAM / TAMIL TAB ========== -->
   <div class="tab-content" id="tab-ta">
     <div class="sec-header">
       <div class="sec-title">Recently Watched</div>
@@ -934,7 +804,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div class="watch-grid" id="watch-grid-ta"></div>
     </div>
     <div class="search-sec">
-      <div class="section-label">Search Tamil Movie or Series</div>
+      <div class="section-label">Search Malayalam / Tamil Movie or Series</div>
       <div class="search-row">
         <div class="srch-wrap">
           <input type="text" id="srch-ta" placeholder="Type title…" autocomplete="off" />
@@ -942,6 +812,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         </div>
       </div>
       <div class="ctrl-row">
+        <div class="ctrl-grp">
+          <div class="ctrl-lbl">Language</div>
+          <select id="lang-ta" onchange="updateEinthusan('ta', selMovie.ta?.title || document.getElementById('srch-ta').value || '')">
+            <option value="malayalam" selected>Malayalam</option>
+            <option value="tamil">Tamil</option>
+          </select>
+        </div>
         <div class="series-ctrl" id="sc-ta">
           <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
             <input type="number" class="num-in" id="s-ta" value="1" min="1" /></div>
@@ -999,7 +876,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.</p>
       <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-ta" href="https://einthusan.tv/movie/results/?find=Popularity&lang=tamil&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
+        <a class="ein-browse-btn" id="ein-browse-ta" href="https://einthusan.tv/movie/results/?find=Popularity&lang=tamil&ptype=view&tp=alltime" target="_blank">🌐 Search selected language on Einthusan</a>
       </div>
       <div class="ein-helper-row" style="margin-top:12px;">
         <input type="text" id="ein-url-ta" placeholder="https://einthusan.tv/movie/watch/…" />
@@ -1073,11 +950,11 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 let TMDB_KEY = 'a4b2a0c3db06c4c3e7d5d67c9be6240b';
 let currentUser = localStorage.getItem('sv_user') || 'Joel';
 let timers = {};
-let selMovie = { en:null, hi:null, ml:null, ta:null };
+let selMovie = { en:null, hi:null, ta:null };
 let currentYtId = null;
 let seriesInfoCache = {};
 // Track active server per lang
-let activeServer = { en:null, hi:null, ml:null, ta:null };
+let activeServer = { en:null, hi:null, ta:null };
 let activeWatchSession = null;
 
 /* ================================================
@@ -1340,14 +1217,39 @@ function onSeasonChange() {
 /* ================================================
    INIT
    ================================================ */
+function migrateMalayalamIntoTamil() {
+  // One-time merge so old Malayalam local data becomes the main data after removing the duplicate Tamil tab.
+  const flagsKey = 'sv_migrated_ml_into_ta_v1';
+  if (localStorage.getItem(flagsKey)) return;
+  const users = getUsers();
+  users.forEach(user => {
+    ['r','w'].forEach(kind => {
+      const mlKey = `sv_${kind}_${user}_ml`;
+      const taKey = `sv_${kind}_${user}_ta`;
+      try {
+        const ml = JSON.parse(localStorage.getItem(mlKey) || '[]');
+        const ta = JSON.parse(localStorage.getItem(taKey) || '[]');
+        const seen = new Set();
+        const merged = [...ta, ...ml].filter(item => {
+          const key = `${item.tmdbId}_${item.type}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        if (merged.length) localStorage.setItem(taKey, JSON.stringify(merged));
+      } catch(e) {}
+    });
+  });
+  localStorage.setItem(flagsKey, '1');
+}
 document.getElementById('api-banner').classList.add('hidden');
+migrateMalayalamIntoTamil();
 initUsers();
 renderAllRecents();
-initIntro();
-initSearch('en'); initSearch('hi'); initSearch('ml'); initSearch('ta');
+initSearch('en'); initSearch('hi'); initSearch('ta');
 initYTSearch();
 
-['en','hi','ml','ta'].forEach(lang => {
+['en','hi','ta'].forEach(lang => {
   const raw = localStorage.getItem(`sv_srvs_${lang}`);
   if (raw) {
     try {
@@ -1363,19 +1265,6 @@ initYTSearch();
   }
   renderSrvPills(lang);
 });
-
-/* ================================================
-   INTRO
-   ================================================ */
-function initIntro(){
-  setTimeout(()=>{
-    document.getElementById('intro').classList.add('open');
-    setTimeout(()=>{
-      document.getElementById('intro').classList.add('fade-out');
-      setTimeout(()=>document.getElementById('intro').style.display='none',900);
-    },1600);
-  },900);
-}
 
 /* ================================================
    TABS
@@ -1440,7 +1329,7 @@ function createUser(){
 function deleteUser(name){
   if(name===currentUser){alert("Can't delete current user.");return;}
   const users=getUsers().filter(u=>u!==name); setUsers(users);
-  ['en','hi','ml','ta','yt'].forEach(l=>{ localStorage.removeItem(`sv_r_${name}_${l}`); localStorage.removeItem(`sv_w_${name}_${l}`); });
+  ['en','hi','ta','yt'].forEach(l=>{ localStorage.removeItem(`sv_r_${name}_${l}`); localStorage.removeItem(`sv_w_${name}_${l}`); });
   renderUserDropdown();
 }
 
@@ -1566,7 +1455,7 @@ function playMovie(lang){
   const bar = document.getElementById('srv-btn-bar-' + lang);
   if (bar) bar.classList.add('on');
 
-  const langLabels={en:'English',hi:'Hindi',ml:'Malayalam',ta:'Tamil'};
+  const langLabels={en:'English',hi:'Hindi',ta:'Malayalam / Tamil'};
   document.getElementById('nb-'+lang).classList.add('on');
   document.getElementById('npi-'+lang).src=m.poster||'';
   document.getElementById('npi-'+lang).style.display=m.poster?'block':'none';
@@ -1654,7 +1543,8 @@ function navEpisode(lang, dir) {
 function updateEinthusan(lang, title) {
   const el = document.getElementById('ein-browse-'+lang);
   if (!el) return;
-  const langMap = { ml:'malayalam', hi:'hindi', ta:'tamil' };
+  const selectedTaLang = document.getElementById('lang-ta')?.value || 'tamil';
+  const langMap = { hi:'hindi', ta:selectedTaLang };
   const l = langMap[lang] || lang;
   el.href = `https://einthusan.tv/movie/results/?lang=${l}&query=${encodeURIComponent(title)}`;
 }
@@ -1843,7 +1733,7 @@ function clearCloudSyncSettings(e){
 async function syncNow(e){
   e?.stopPropagation?.();
   if(!cloudReady()){ alert(getCloudUrl() ? 'Add the Sync PIN first.' : 'Firebase URL is missing in the code.'); return; }
-  for (const lang of ['en','hi','ml','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
+  for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
   updateCloudSyncState(`Cloud sync on · user: ${currentUser}`,'cloud-sync-ok');
 }
 window.toggleCloudSyncBox=toggleCloudSyncBox;
@@ -2165,7 +2055,7 @@ function cwResume(lang) {
    RECENTLY WATCHED RENDER
    ================================================ */
 function renderAllRecents() {
-  ['en','hi','ml','ta','yt'].forEach(lang => {
+  ['en','hi','ta','yt'].forEach(lang => {
     renderRecent(lang);
     renderContinueWatching(lang);
     renderWatchlist(lang);
