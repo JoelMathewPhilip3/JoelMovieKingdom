@@ -632,12 +632,11 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 <!-- SITE HEADER -->
 <div id="site-header">
   <div class="site-logo">👑 Joel's Movie Kingdom</div>
-  <div class="user-area single-user">
-    <select id="device-master-select" class="device-master-select" onchange="handleMasterDropdown(this,event)">
-      <option value="">Device master</option>
-      <option value="upload">Make this device master</option>
-      <option value="load">Load master data</option>
-    </select>
+<div class="user-area single-user">
+  <div class="fixed-sync-pill syncing" id="header-sync-pill">
+    <span class="fixed-sync-dot anim" id="header-sync-dot"></span>
+    <span id="header-sync-text">Syncing…</span>
+  </div>
 </div>
 </div>
 
@@ -3045,5 +3044,92 @@ if ('caches' in window) {
 })();
 </script>
 
+<script>
+/* ========== AUTO CLOUD SYNC - NO MASTER / LOAD BUTTONS ========== */
+(function(){
+  'use strict';
+
+  const AUTO_SYNC_LANGS = ['en','hi','ta','yt'];
+  let autoSyncBusy = false;
+  let lastAutoSync = 0;
+
+  function autoRefreshMovieViews(){
+    for(const lang of AUTO_SYNC_LANGS){
+      try{ renderRecent(lang); }catch(e){}
+      try{ renderContinueWatching(lang); }catch(e){}
+      try{ renderWatchlist(lang); }catch(e){}
+    }
+
+    try{
+      if(typeof renderPremiumHome === 'function') renderPremiumHome();
+    }catch(e){}
+  }
+
+  async function autoLoadCloudData(reason){
+    if(autoSyncBusy) return;
+
+    if(typeof cloudReady === 'function' && !cloudReady()){
+      try{ updateHeaderSyncStatus('error'); }catch(e){}
+      return;
+    }
+
+    autoSyncBusy = true;
+    lastAutoSync = Date.now();
+
+    try{
+      updateHeaderSyncStatus('syncing');
+
+      for(const lang of AUTO_SYNC_LANGS){
+        if(typeof loadFromCloud === 'function'){
+          await loadFromCloud(lang);
+        }
+
+        if(lang !== 'yt' && typeof loadWatchlistFromCloud === 'function'){
+          await loadWatchlistFromCloud(lang);
+        }
+      }
+
+      autoRefreshMovieViews();
+      updateHeaderSyncStatus('synced');
+      console.log('[Auto Sync] Loaded cloud data:', reason || 'auto');
+    }catch(err){
+      console.warn('[Auto Sync] Failed:', err);
+      try{ updateHeaderSyncStatus('error'); }catch(e){}
+    }finally{
+      autoSyncBusy = false;
+    }
+  }
+
+  window.movieAutoSync = autoLoadCloudData;
+
+  function startAutoSync(){
+    setTimeout(() => autoLoadCloudData('page open'), 800);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', startAutoSync);
+  }else{
+    startAutoSync();
+  }
+
+  window.addEventListener('focus', () => {
+    autoLoadCloudData('window focus');
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden){
+      autoLoadCloudData('tab visible');
+    }
+  });
+
+  // Light refresh only. This avoids needing Master/Load but does not spam Firebase.
+  setInterval(() => {
+    if(Date.now() - lastAutoSync > 25000){
+      autoLoadCloudData('timer');
+    }
+  }, 30000);
+})();
+</script>
+  
 </body>
 </html>
