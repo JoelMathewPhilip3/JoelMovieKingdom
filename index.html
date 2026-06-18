@@ -749,8 +749,8 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
             Last watched: <strong id="lw-text-en">—</strong>
           </div>
           <div class="auto-save-note">
-            <span class="auto-save-pill" id="auto-save-pill-en">⏱ Auto-save on</span>
-            <span class="auto-save-hint" id="auto-save-hint-en">Time is saved when you leave, close, switch titles, or change episodes.</span>
+            <span class="auto-save-pill" id="auto-save-pill-en">💾 Manual save</span>
+            <span class="auto-save-hint" id="auto-save-hint-en">Click Save Progress after you stop watching.</span>
           </div>
         </div>
       </div>
@@ -787,6 +787,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('en','default',this)">Default</button>
           <button class="vbtn" onclick="setView('en','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('en')">⛶ Fullscreen</button>
+          <button class="vbtn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
         </div>
       </div>
       <div class="ep-nav-bar" id="ep-nav-en">
@@ -871,6 +872,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('hi','default',this)">Default</button>
           <button class="vbtn" onclick="setView('hi','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('hi')">⛶ Fullscreen</button>
+          <button class="vbtn" onclick="manualSaveProgress('hi')">💾 Save Progress</button>
         </div>
       </div>
       <div class="srv-panel" id="srv-panel-hi">
@@ -969,6 +971,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('ta','default',this)">Default</button>
           <button class="vbtn" onclick="setView('ta','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('ta')">⛶ Fullscreen</button>
+          <button class="vbtn" onclick="manualSaveProgress('ta')">💾 Save Progress</button>
         </div>
       </div>
       <div class="srv-panel" id="srv-panel-ta">
@@ -1037,6 +1040,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('yt','default',this)">Default</button>
           <button class="vbtn" onclick="setView('yt','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('yt')">⛶ Fullscreen</button>
+          <button class="vbtn" onclick="manualSaveProgress('yt')">💾 Save Progress</button>
         </div>
       </div>
     </div>
@@ -1180,7 +1184,6 @@ function selectServer(lang, srvKey) {
     const isTV = m.type === 'tv';
     const s = document.getElementById('s-' + lang)?.value || 1;
     const ep = document.getElementById('e-' + lang)?.value || 1;
-    saveCurrentWatchPosition();
     document.getElementById('vf-' + lang).src = buildSrcWithKey(lang, srvKey, m, isTV, s, ep);
     startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
   }
@@ -1315,8 +1318,8 @@ async function updateLastWatched(tmdbId, currentSeason, currentEp) {
   const hint = document.getElementById('auto-save-hint-en');
   if (hint) {
     hint.textContent = saved
-      ? `Last auto-saved ${saved.ts}. It updates again when you leave, close, switch titles, or change episodes.`
-      : 'Time is saved when you leave, close, switch titles, or change episodes.';
+      ? `Last saved ${saved.ts}. Click Save Progress to update Firebase.`
+      : 'Click Save Progress after you stop watching.';
   }
 }
 
@@ -1571,7 +1574,6 @@ function changeServer(lang){
   const isTV=m.type==='tv';
   const s=document.getElementById('s-'+lang).value||1;
   const ep=document.getElementById('e-'+lang).value||1;
-  saveCurrentWatchPosition();
   document.getElementById('vf-'+lang).src=buildSrc(lang,m,isTV,s,ep);
   startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
 }
@@ -1980,10 +1982,10 @@ async function clearRecent(lang) {
 }
 
 /* ================================================
-   AUTOMATIC WATCH POSITION SAVE
+   MANUAL WATCH POSITION SAVE
    Note: third-party movie iframes usually do not expose exact playback time.
-   This tracks elapsed watch time from when you press Play and saves it when
-   you close/leave/switch titles. YouTube resume uses its official start param.
+   This estimates elapsed watch time from when you press Play and saves only
+   when you click Save Progress. YouTube resume uses its official start param.
    ================================================ */
 function parseTsToSeconds(ts) {
   if (!ts) return 0;
@@ -2026,17 +2028,23 @@ async function setSavedTimestamp(lang, movie, seconds, season, ep) {
     saved: Date.now()
   };
   localStorage.setItem(getTsKey(movie.tmdbId, lang), JSON.stringify(data));
-  try { await cloudSet(tsCloudKey(movie.tmdbId, lang), data); } catch(e) {}
+  let cloudOk = true;
+  try {
+    await cloudSet(tsCloudKey(movie.tmdbId, lang), data);
+  } catch(e) {
+    cloudOk = false;
+    console.warn('[Progress Save] Firebase save failed', e);
+  }
   if (lang === 'en') {
     renderContinueWatching('en');
     if (movie.type === 'tv') updateLastWatched(movie.tmdbId, season, ep);
   }
+  return cloudOk;
 }
 function startWatchSession(lang, movie, season=null, ep=null) {
-  saveCurrentWatchPosition();
   const saved = getLocalTimestamp(movie.tmdbId, lang);
   const sameEpisode = !saved || movie.type !== 'tv' ||
-    (String(saved.season || '') === String(season || '') && String(saved.ep || '') === String(ep || ''));
+    (String(saved.season || '') === String(season || '') && String((saved.episode || saved.ep) || '') === String(ep || ''));
   const startSeconds = sameEpisode ? (saved?.seconds ?? parseTsToSeconds(saved?.ts)) : 0;
   activeWatchSession = {
     lang,
@@ -2046,8 +2054,6 @@ function startWatchSession(lang, movie, season=null, ep=null) {
     baseSeconds: startSeconds || 0,
     startedAt: Date.now()
   };
-  // Save selected season/episode immediately so other devices know what you opened.
-  setSavedTimestamp(lang, movie, startSeconds || 0, season, ep);
 }
 function saveCurrentWatchPosition() {
   if (!activeWatchSession) return;
@@ -2058,6 +2064,51 @@ function saveCurrentWatchPosition() {
   s.baseSeconds = total;
   s.startedAt = Date.now();
 }
+async function manualSaveProgress(lang) {
+  let movie = selMovie[lang];
+
+  if (!movie && activeWatchSession && activeWatchSession.lang === lang) {
+    movie = activeWatchSession.movie;
+  }
+
+  if (!movie) {
+    alert('Search for and select a title first.');
+    return;
+  }
+
+  const isTV = movie.type === 'tv';
+  const seasonInput = document.getElementById('s-' + lang);
+  const episodeInput = document.getElementById('e-' + lang);
+  const season = isTV ? parseInt(seasonInput?.value || '1') : null;
+  const ep = isTV ? parseInt(episodeInput?.value || '1') : null;
+
+  let seconds = 0;
+  if (activeWatchSession &&
+      activeWatchSession.lang === lang &&
+      String(activeWatchSession.movie?.tmdbId || '') === String(movie.tmdbId || '')) {
+    const elapsed = Math.max(0, Math.floor((Date.now() - activeWatchSession.startedAt) / 1000));
+    seconds = (activeWatchSession.baseSeconds || 0) + elapsed;
+  } else {
+    const saved = getLocalTimestamp(movie.tmdbId, lang);
+    seconds = saved?.seconds || parseTsToSeconds(saved?.ts);
+  }
+
+  const cloudOk = await setSavedTimestamp(lang, movie, seconds, season, ep);
+
+  if (activeWatchSession && activeWatchSession.lang === lang) {
+    activeWatchSession.baseSeconds = seconds;
+    activeWatchSession.startedAt = Date.now();
+    activeWatchSession.season = season;
+    activeWatchSession.ep = ep;
+  }
+
+  const savedText = `${isTV ? `S${season} E${ep} — ` : ''}${formatWatchTime(seconds)}`;
+  if (cloudOk) {
+    alert(`Saved to Firebase: ${savedText}`);
+  } else {
+    alert(`Saved on this device, but Firebase did not update. Check Realtime Database rules and Firebase URL. Saved value: ${savedText}`);
+  }
+}
 function addResumeParamToUrl(src, seconds) {
   seconds = Math.max(0, Math.floor(seconds || 0));
   if (!seconds || !src) return src;
@@ -2067,11 +2118,13 @@ function addResumeParamToUrl(src, seconds) {
   }
   return src;
 }
-window.addEventListener('pagehide', saveCurrentWatchPosition);
-window.addEventListener('beforeunload', saveCurrentWatchPosition);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') saveCurrentWatchPosition();
-});
+// Manual save only. These auto-save hooks were removed because mobile browsers
+// often stop async Firebase writes during close/leave events.
+// window.addEventListener('pagehide', saveCurrentWatchPosition);
+// window.addEventListener('beforeunload', saveCurrentWatchPosition);
+// document.addEventListener('visibilitychange', () => {
+//   if (document.visibilityState === 'hidden') saveCurrentWatchPosition();
+// });
 async function clearTimestamp(lang) {
   const m = selMovie[lang];
   if (!m) return;
