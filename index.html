@@ -1752,14 +1752,16 @@ function showConverter(vid,thumb,title){
 /* ================================================
    CLOUD SYNC - CLEAN FIREBASE CATEGORY + PROGRESS SYNC
    ================================================ */
-const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
-const CLOUD_ROOM = 'mainSync';
+window.DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
+window.CLOUD_ROOM = 'mainSync';
 function getCloudUrl(){
-  const url = String(DEFAULT_CLOUD_URL || '').trim();
+  const url = String(window.DEFAULT_CLOUD_URL || '').trim();
   if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') return '';
   return url.replace(/\/+$/,'');
 }
-function cloudReady(){ return !!getCloudUrl(); }
+function cloudReady(){
+  return !!getCloudUrl();
+}
 function sanitizeFirebaseKey(key){ return String(key ?? '').replace(/[.#$\[\]]/g,'_'); }
 function cloudPath(path){
   const cleanPath = String(path || '')
@@ -1767,7 +1769,7 @@ function cloudPath(path){
     .filter(Boolean)
     .map(sanitizeFirebaseKey)
     .join('/');
-  return `${getCloudUrl()}/movieKingdom/${sanitizeFirebaseKey(CLOUD_ROOM)}/${cleanPath}.json`;
+  return `${getCloudUrl()}/movieKingdom/${sanitizeFirebaseKey(window.CLOUD_ROOM || 'mainSync')}/${cleanPath}.json`;
 }
 function updateHeaderSyncStatus(status){
   const pill=document.getElementById('header-sync-pill');
