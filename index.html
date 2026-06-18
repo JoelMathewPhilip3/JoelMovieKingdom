@@ -625,6 +625,36 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .master-sync-message{display:none!important;}
 @media(max-width:640px){#site-header{flex-wrap:nowrap!important;}#site-header .site-logo{min-width:0;}#site-header .user-area.single-user{width:auto!important;margin-left:auto!important;justify-content:flex-end!important;flex-wrap:nowrap!important;} .device-master-select{width:auto!important;max-width:210px;min-width:170px;}}
 
+
+/* ========== MANUAL SAVE BUTTON FIX ========== */
+.manual-save-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold))!important;
+  border-color:transparent!important;
+  color:#09090e!important;
+  font-weight:700!important;
+  position:relative!important;
+  z-index:999999!important;
+  pointer-events:auto!important;
+}
+.now-save-btn{
+  margin-left:auto;
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:999px;padding:8px 14px;color:#09090e;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;
+  position:relative;z-index:999999;pointer-events:auto;white-space:nowrap;
+}
+.now-save-btn:hover{opacity:.9;transform:translateY(-1px);}
+.srv-save-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:999px;padding:6px 14px;color:#09090e;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;
+  position:relative;z-index:999999;pointer-events:auto;white-space:nowrap;
+}
+@media(max-width:640px){.now-save-btn{width:100%;margin-left:0}.srv-save-btn{flex:1}}
+
+
+.sug-actions{pointer-events:auto!important;}
+.sug-add-watch{pointer-events:auto!important;}
 </style>
 </head>
 <body>
@@ -763,11 +793,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         <div class="np-meta" id="npm-en"></div>
       </div>
       <div class="np-star" id="nps-en"></div>
+      <button class="now-save-btn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
     </div>
 
     <!-- Server button bar above player -->
     <div class="srv-btn-bar" id="srv-btn-bar-en">
       <span class="srv-bar-label">Server:</span>
+      <button class="srv-save-btn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
       <div id="srv-pills-en" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       <div class="srv-bar-sep"></div>
       <div class="srv-bar-actions">
@@ -787,7 +819,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('en','default',this)">Default</button>
           <button class="vbtn" onclick="setView('en','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('en')">⛶ Fullscreen</button>
-          <button class="vbtn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
+          <button class="vbtn manual-save-btn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
         </div>
       </div>
       <div class="ep-nav-bar" id="ep-nav-en">
@@ -850,11 +882,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <img class="np-img" id="npi-hi" src="" alt="" />
       <div class="np-det"><div class="np-title" id="npt-hi"></div><div class="np-meta" id="npm-hi"></div></div>
       <div class="np-star" id="nps-hi"></div>
+      <button class="now-save-btn" onclick="manualSaveProgress('hi')">💾 Save Progress</button>
     </div>
 
     <!-- Server button bar above player -->
     <div class="srv-btn-bar" id="srv-btn-bar-hi">
       <span class="srv-bar-label">Server:</span>
+      <button class="srv-save-btn" onclick="manualSaveProgress('hi')">💾 Save Progress</button>
       <div id="srv-pills-hi" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       <div class="srv-bar-sep"></div>
       <div class="srv-bar-actions">
@@ -872,7 +906,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('hi','default',this)">Default</button>
           <button class="vbtn" onclick="setView('hi','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('hi')">⛶ Fullscreen</button>
-          <button class="vbtn" onclick="manualSaveProgress('hi')">💾 Save Progress</button>
+          <button class="vbtn manual-save-btn" onclick="manualSaveProgress('hi')">💾 Save Progress</button>
         </div>
       </div>
       <div class="srv-panel" id="srv-panel-hi">
@@ -949,11 +983,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <img class="np-img" id="npi-ta" src="" alt="" />
       <div class="np-det"><div class="np-title" id="npt-ta"></div><div class="np-meta" id="npm-ta"></div></div>
       <div class="np-star" id="nps-ta"></div>
+      <button class="now-save-btn" onclick="manualSaveProgress('ta')">💾 Save Progress</button>
     </div>
 
     <!-- Server button bar above player -->
     <div class="srv-btn-bar" id="srv-btn-bar-ta">
       <span class="srv-bar-label">Server:</span>
+      <button class="srv-save-btn" onclick="manualSaveProgress('ta')">💾 Save Progress</button>
       <div id="srv-pills-ta" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       <div class="srv-bar-sep"></div>
       <div class="srv-bar-actions">
@@ -971,7 +1007,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('ta','default',this)">Default</button>
           <button class="vbtn" onclick="setView('ta','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('ta')">⛶ Fullscreen</button>
-          <button class="vbtn" onclick="manualSaveProgress('ta')">💾 Save Progress</button>
+          <button class="vbtn manual-save-btn" onclick="manualSaveProgress('ta')">💾 Save Progress</button>
         </div>
       </div>
       <div class="srv-panel" id="srv-panel-ta">
@@ -1027,6 +1063,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     <div class="now-bar" id="nb-yt">
       <img class="np-yt-img" id="npi-yt" src="" alt="" />
       <div class="np-det"><div class="np-title" id="npt-yt"></div><div class="np-meta" id="npm-yt"></div></div>
+      <button class="now-save-btn" onclick="manualSaveProgress('yt')">💾 Save Progress</button>
     </div>
     <div class="player-outer" id="po-yt">
       <div class="player-stage default" id="ps-yt">
@@ -1040,7 +1077,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="vbtn active" onclick="setView('yt','default',this)">Default</button>
           <button class="vbtn" onclick="setView('yt','theatre',this)">Theatre</button>
           <button class="vbtn" onclick="fsPlayer('yt')">⛶ Fullscreen</button>
-          <button class="vbtn" onclick="manualSaveProgress('yt')">💾 Save Progress</button>
+          <button class="vbtn manual-save-btn" onclick="manualSaveProgress('yt')">💾 Save Progress</button>
         </div>
       </div>
     </div>
@@ -1185,7 +1222,10 @@ function selectServer(lang, srvKey) {
     const s = document.getElementById('s-' + lang)?.value || 1;
     const ep = document.getElementById('e-' + lang)?.value || 1;
     document.getElementById('vf-' + lang).src = buildSrcWithKey(lang, srvKey, m, isTV, s, ep);
-    startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
+    // Keep the current manual-save timer running when only changing servers.
+    if (!activeWatchSession || activeWatchSession.lang !== lang || String(activeWatchSession.movie?.tmdbId||'') !== String(m.tmdbId||'')) {
+      startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
+    }
   }
 }
 
@@ -1575,7 +1615,9 @@ function changeServer(lang){
   const s=document.getElementById('s-'+lang).value||1;
   const ep=document.getElementById('e-'+lang).value||1;
   document.getElementById('vf-'+lang).src=buildSrc(lang,m,isTV,s,ep);
-  startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
+  if (!activeWatchSession || activeWatchSession.lang !== lang || String(activeWatchSession.movie?.tmdbId||'') !== String(m.tmdbId||'')) {
+    startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
+  }
 }
 
 /* ================================================
@@ -2030,7 +2072,17 @@ async function setSavedTimestamp(lang, movie, seconds, season, ep) {
   localStorage.setItem(getTsKey(movie.tmdbId, lang), JSON.stringify(data));
   let cloudOk = true;
   try {
-    await cloudSet(tsCloudKey(movie.tmdbId, lang), data);
+    // Save progress separately so a progress write problem does not break
+    // the main watchlist/recent sync indicator.
+    if (typeof cloudReady === 'function' && cloudReady()) {
+      const r = await fetch(cloudPath(tsCloudKey(movie.tmdbId, lang)), {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
+      });
+      if(!r.ok) throw new Error('Progress save failed: ' + r.status);
+      if (typeof updateHeaderSyncStatus === 'function') updateHeaderSyncStatus('synced');
+    }
   } catch(e) {
     cloudOk = false;
     console.warn('[Progress Save] Firebase save failed', e);
