@@ -650,7 +650,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   </div>
 </div>
 
-<!-- CLOUD SYNC SETUP REMOVED: sync room is hardcoded to 0530 -->
+<!-- CLOUD SYNC SETUP REMOVED: sync room is hardcoded to cloud sync  -->
 <div id="cloud-sync-box" class="collapsed" aria-hidden="true"></div>
 
 <!-- MAIN -->
@@ -1771,7 +1771,7 @@ function updateHeaderSyncStatus(status){
   if(!pill || !dot || !text) return;
   pill.className='fixed-sync-pill ' + (status==='syncing'?'syncing':status==='error'?'error':'');
   dot.className='fixed-sync-dot' + (status==='syncing'?' anim':'');
-  text.textContent = status==='syncing' ? 'Syncing 0530…' : status==='error' ? 'Sync offline' : '✓ Synced 0530';
+  text.textContent = status==='syncing' ? 'Syncing…' : status==='error' ? 'Sync offline' : '✓ Synced';
 }
 async function cloudGet(key) {
   if(!cloudReady()) return null;
@@ -1863,10 +1863,10 @@ async function cloudGetRequired(key){
 async function makeThisDeviceSourceOfTruth(e){
   e?.stopPropagation?.();
   if(!cloudReady()){ updateHeaderSyncStatus('error'); showMasterSyncMessage('bad','✕ Firebase URL is missing in the code.'); alert('Firebase URL is missing in the code.'); return; }
-  if(!confirm('This will overwrite the 0530 cloud sync with THIS device data. Use this on your laptop if your laptop has the correct movies. Continue?')) return;
+  if(!confirm('This will overwrite the cloud sync with THIS device data. Use this on your laptop if your laptop has the correct movies. Continue?')) return;
   setMasterButtonsBusy(true);
   updateHeaderSyncStatus('syncing');
-  showMasterSyncMessage('work','Uploading laptop/source data to cloud room 0530…');
+  showMasterSyncMessage('work','Uploading laptop/source data to cloud sync…');
   try{
     for(const lang of ['en','hi','ta','yt']){
       await cloudSetVerified(syncKey(lang), getR(lang));
@@ -1888,7 +1888,7 @@ async function makeThisDeviceSourceOfTruth(e){
     refreshAllMovieViews();
     const c=countMasterDataSnapshot();
     updateHeaderSyncStatus('synced');
-    showMasterSyncMessage('ok',`✓ Master upload verified. Cloud room 0530 now has ${c.recent} recent items and ${c.watch} watchlist items from this device.`);
+    showMasterSyncMessage('ok',`✓ Master upload verified. Cloud sync now has ${c.recent} recent items and ${c.watch} watchlist items from this device.`);
     alert(`✓ Master upload verified. Cloud room 0530 now has ${c.recent} recent items and ${c.watch} watchlist items. Now open the phone and tap Load master data.`);
   }catch(err){
     console.warn('[Cloud Sync] source upload failed', err);
@@ -2875,261 +2875,196 @@ if ('caches' in window) {
 })();
 </script>
 
-
-
-<script>
-/* ========== FINAL ROBUST MASTER SYNC FIX - does not depend on older sync functions ========== */
+  <script>
+/* ========== CLEAN CATEGORY FIREBASE SYNC ========== */
 (function(){
   'use strict';
 
-  const USER = 'Joel';
-  const PIN = '0530';
-  const LANGS = ['en','hi','ta','yt'];
   const DB_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
-  const MASTER_KEY = 'master_snapshot__Joel__0530';
+  const CLOUD_ROOM = 'mainSync';
+  const USER = 'Joel';
+  const LANGS = ['en', 'hi', 'ta', 'yt'];
 
-  function simpleHash(str){
-    let h = 2166136261;
-    str = String(str || '');
-    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); }
-    return (h >>> 0).toString(36);
+  function cleanKey(key){
+    return String(key || '').replace(/[.#$\[\]\/]/g, '_');
   }
-  function cleanKey(key){ return String(key).replace(/[.#$\[\]\/]/g,'_'); }
-  function cloudUrl(key){ return `${DB_URL.replace(/\/+$/,'')}/movieKingdom/${cleanKey(simpleHash(PIN))}/${cleanKey(key)}.json`; }
-  function localRecentKey(lang){ return `sv_r_${USER}_${lang}`; }
-  function localWatchKey(lang){ return `sv_w_${USER}_${lang}`; }
-  function safeJsonGet(key, fallback){
-    try{
-      const raw = localStorage.getItem(key);
-      if(raw === null || raw === undefined || raw === '') return fallback;
-      const parsed = JSON.parse(raw);
-      return parsed ?? fallback;
-    }catch(e){ return fallback; }
-  }
-  function safeJsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value ?? [])); }
 
-  function setMasterDropdownText(text){
-    const sel = document.getElementById('device-master-select');
-    if(!sel) return;
-    const first = sel.querySelector('option[value=""]') || sel.options[0];
-    if(first) first.textContent = text || 'Device master';
-    sel.value = '';
+  function firebasePath(path){
+    const cleanParts = String(path || '')
+      .split('/')
+      .filter(Boolean)
+      .map(cleanKey)
+      .join('/');
+
+    return `${DB_URL.replace(/\/+$/, '')}/movieKingdom/${CLOUD_ROOM}/${cleanParts}.json`;
   }
-  function status(kind, message){
-    // Visual sync/status box removed by request.
-    console.log(message || (kind === 'ok' ? 'Master worked' : kind === 'bad' ? 'Master not worked' : 'Working'));
-  }
-  function busy(on){
-    const sel = document.getElementById('device-master-select');
-    if(sel){ sel.disabled = !!on; sel.style.opacity = on ? '.6' : ''; sel.style.cursor = on ? 'wait' : 'pointer'; }
-  }
-  function getLocalSnapshot(){
-    const data = { version: 3, pin: PIN, user: USER, updatedAt: new Date().toISOString(), recent: {}, watchlist: {}, timestamps: {} };
-    LANGS.forEach(lang => {
-      data.recent[lang] = safeJsonGet(localRecentKey(lang), []);
-      if(lang !== 'yt') data.watchlist[lang] = safeJsonGet(localWatchKey(lang), []);
-    });
-    const tsPrefix = `sv_ts_${USER}_`;
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.startsWith(tsPrefix)) data.timestamps[k] = safeJsonGet(k, null);
-    }
-    return data;
-  }
-  function countSnapshot(snap){
-    let recent = 0, watch = 0, ts = 0;
-    LANGS.forEach(lang => {
-      recent += Array.isArray(snap?.recent?.[lang]) ? snap.recent[lang].length : 0;
-      watch += Array.isArray(snap?.watchlist?.[lang]) ? snap.watchlist[lang].length : 0;
-    });
-    ts = snap?.timestamps ? Object.keys(snap.timestamps).length : 0;
-    return {recent, watch, ts};
-  }
-  async function putCloud(key, value){
-    const res = await fetch(cloudUrl(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(value) });
-    if(!res.ok) throw new Error(`Firebase write failed: ${res.status}`);
-    return await res.json();
-  }
-  async function getCloud(key){
-    const res = await fetch(cloudUrl(key), { method:'GET', cache:'no-store' });
-    if(!res.ok) throw new Error(`Firebase read failed: ${res.status}`);
-    return await res.json();
-  }
-  function applySnapshotToThisDevice(snap){
-    if(!snap || !snap.recent) throw new Error('Master snapshot is empty or invalid.');
-    LANGS.forEach(lang => {
-      safeJsonSet(localRecentKey(lang), Array.isArray(snap.recent[lang]) ? snap.recent[lang] : []);
-      if(lang !== 'yt') safeJsonSet(localWatchKey(lang), Array.isArray(snap.watchlist?.[lang]) ? snap.watchlist[lang] : []);
-    });
-    if(snap.timestamps && typeof snap.timestamps === 'object'){
-      Object.keys(snap.timestamps).forEach(k => {
-        if(k.startsWith(`sv_ts_${USER}_`)) safeJsonSet(k, snap.timestamps[k]);
+
+  window.cloudReady = function(){
+    return !!DB_URL && DB_URL.includes('firebaseio.com');
+  };
+
+  window.cloudGet = async function(path){
+    if (!window.cloudReady()) return null;
+
+    try {
+      updateHeaderSyncStatus('syncing');
+
+      const res = await fetch(firebasePath(path), {
+        method: 'GET',
+        cache: 'no-store'
       });
+
+      if (!res.ok) throw new Error('Firebase read failed: ' + res.status);
+
+      const data = await res.json();
+      updateHeaderSyncStatus('synced');
+      return data;
+    } catch (err) {
+      console.warn('[Firebase Sync Read Failed]', err);
+      updateHeaderSyncStatus('error');
+      return null;
     }
+  };
+
+  window.cloudSet = async function(path, value){
+    if (!window.cloudReady()) return;
+
+    try {
+      updateHeaderSyncStatus('syncing');
+
+      const res = await fetch(firebasePath(path), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value)
+      });
+
+      if (!res.ok) throw new Error('Firebase write failed: ' + res.status);
+
+      updateHeaderSyncStatus('synced');
+    } catch (err) {
+      console.warn('[Firebase Sync Write Failed]', err);
+      updateHeaderSyncStatus('error');
+      throw err;
+    }
+  };
+
+  window.cloudDelete = async function(path){
+    if (!window.cloudReady()) return;
+
+    try {
+      updateHeaderSyncStatus('syncing');
+
+      const res = await fetch(firebasePath(path), {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Firebase delete failed: ' + res.status);
+
+      updateHeaderSyncStatus('synced');
+    } catch (err) {
+      console.warn('[Firebase Sync Delete Failed]', err);
+      updateHeaderSyncStatus('error');
+      throw err;
+    }
+  };
+
+  window.syncKey = function(lang){
+    return `recent/${lang}`;
+  };
+
+  window.watchSyncKey = function(lang){
+    return `watchlist/${lang}`;
+  };
+
+  window.tsCloudKey = function(tmdbId, lang = 'en'){
+    return `timestamps/${lang}/${tmdbId}`;
+  };
+
+  function updateHeaderSyncStatus(status){
+    const pill = document.getElementById('header-sync-pill');
+    const dot = document.getElementById('header-sync-dot');
+    const text = document.getElementById('header-sync-text');
+
+    if (!pill || !dot || !text) return;
+
+    pill.className = 'fixed-sync-pill ' +
+      (status === 'syncing' ? 'syncing' : status === 'error' ? 'error' : '');
+
+    dot.className = 'fixed-sync-dot' +
+      (status === 'syncing' ? ' anim' : '');
+
+    text.textContent =
+      status === 'syncing' ? 'Syncing…' :
+      status === 'error' ? 'Sync offline' :
+      '✓ Synced';
   }
-  function refreshUI(){
+
+  window.updateHeaderSyncStatus = updateHeaderSyncStatus;
+
+  function refreshAllViews(){
     LANGS.forEach(lang => {
-      try{ if(window.renderRecent) window.renderRecent(lang); }catch(e){}
-      try{ if(window.renderWatchlist) window.renderWatchlist(lang); }catch(e){}
-      try{ if(window.renderContinueWatching) window.renderContinueWatching(lang); }catch(e){}
+      try { if (typeof renderRecent === 'function') renderRecent(lang); } catch(e) {}
+      try { if (typeof renderWatchlist === 'function') renderWatchlist(lang); } catch(e) {}
+      try { if (typeof renderContinueWatching === 'function') renderContinueWatching(lang); } catch(e) {}
     });
-    try{ if(window.renderPremiumHome) window.renderPremiumHome(); }catch(e){}
+
+    try { if (typeof renderPremiumHome === 'function') renderPremiumHome(); } catch(e) {}
   }
 
-  window.makeThisDeviceSourceOfTruth = async function(e){
-    if(e){ e.preventDefault(); e.stopPropagation(); }
-    busy(true);
-    status('work','Master upload working…');
-    let ok = false;
-    try{
-      const snap = getLocalSnapshot();
-      const c = countSnapshot(snap);
-      await putCloud(MASTER_KEY, snap);
-      const verify = await getCloud(MASTER_KEY);
-      const vc = countSnapshot(verify);
-      if(vc.recent !== c.recent || vc.watch !== c.watch) throw new Error('Firebase verification count mismatch.');
-      ok = true;
-      status('ok', 'Master upload worked.');
-    }catch(err){
-      console.error('[Master Sync Upload Failed]', err);
-      status('bad', 'Master upload not worked.');
-    }finally{ busy(false); }
-    return ok;
-  };
-
-  window.replaceThisDeviceFromCloud = async function(e){
-    if(e){ e.preventDefault(); e.stopPropagation(); }
-    busy(true);
-    status('work','Load working…');
-    let ok = false;
-    try{
-      const snap = await getCloud(MASTER_KEY);
-      if(!snap) throw new Error('No master snapshot found yet. Upload from laptop first.');
-      applySnapshotToThisDevice(snap);
-      refreshUI();
-      const c = countSnapshot(snap);
-      ok = true;
-      status('ok', 'Load worked.');
-    }catch(err){
-      console.error('[Master Sync Download Failed]', err);
-      status('bad', 'Load not worked.');
-    }finally{ busy(false); }
-    return ok;
-  };
-
-  window.handleMasterDropdown = async function(sel,e){
-    const val = sel?.value || '';
-    if(!val) return;
-    let ok = false;
-    if(val === 'upload'){
-      setMasterDropdownText('Master working…');
-      ok = await window.makeThisDeviceSourceOfTruth(e);
-      setMasterDropdownText(ok ? 'Master worked' : 'Master not worked');
-    }
-    if(val === 'load'){
-      setMasterDropdownText('Load working…');
-      ok = await window.replaceThisDeviceFromCloud(e);
-      setMasterDropdownText(ok ? 'Load worked' : 'Load not worked');
-    }
-  };
-
-  function wireButtons(){
-    setMasterDropdownText('Device master');
-    status('work','Ready.');
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireButtons);
-  else wireButtons();
-  window.addEventListener('load', wireButtons);
-})();
-</script>
-
-<script>
-/* ========== AUTO CLOUD SYNC - NO MASTER / LOAD BUTTONS ========== */
-(function(){
-  'use strict';
-
-  const AUTO_SYNC_LANGS = ['en','hi','ta','yt'];
-  let autoSyncBusy = false;
-  let lastAutoSync = 0;
-
-  function autoRefreshMovieViews(){
-    for(const lang of AUTO_SYNC_LANGS){
-      try{ renderRecent(lang); }catch(e){}
-      try{ renderContinueWatching(lang); }catch(e){}
-      try{ renderWatchlist(lang); }catch(e){}
-    }
-
-    try{
-      if(typeof renderPremiumHome === 'function') renderPremiumHome();
-    }catch(e){}
-  }
-
-  async function autoLoadCloudData(reason){
-    if(autoSyncBusy) return;
-
-    if(typeof cloudReady === 'function' && !cloudReady()){
-      try{ updateHeaderSyncStatus('error'); }catch(e){}
+  async function autoSyncFromCloud(reason){
+    if (!window.cloudReady()) {
+      updateHeaderSyncStatus('error');
       return;
     }
 
-    autoSyncBusy = true;
-    lastAutoSync = Date.now();
-
-    try{
+    try {
       updateHeaderSyncStatus('syncing');
 
-      for(const lang of AUTO_SYNC_LANGS){
-        if(typeof loadFromCloud === 'function'){
+      for (const lang of LANGS) {
+        if (typeof loadFromCloud === 'function') {
           await loadFromCloud(lang);
         }
 
-        if(lang !== 'yt' && typeof loadWatchlistFromCloud === 'function'){
+        if (lang !== 'yt' && typeof loadWatchlistFromCloud === 'function') {
           await loadWatchlistFromCloud(lang);
         }
       }
 
-      autoRefreshMovieViews();
+      refreshAllViews();
       updateHeaderSyncStatus('synced');
-      console.log('[Auto Sync] Loaded cloud data:', reason || 'auto');
-    }catch(err){
-      console.warn('[Auto Sync] Failed:', err);
-      try{ updateHeaderSyncStatus('error'); }catch(e){}
-    }finally{
-      autoSyncBusy = false;
+      console.log('[Movie Kingdom Sync] completed:', reason || 'auto');
+    } catch (err) {
+      console.warn('[Movie Kingdom Sync] failed:', err);
+      updateHeaderSyncStatus('error');
     }
   }
 
-  window.movieAutoSync = autoLoadCloudData;
+  window.movieAutoSync = autoSyncFromCloud;
 
-  function startAutoSync(){
-    setTimeout(() => autoLoadCloudData('page open'), 800);
+  function startSync(){
+    setTimeout(() => autoSyncFromCloud('page open'), 700);
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', startAutoSync);
-  }else{
-    startAutoSync();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startSync);
+  } else {
+    startSync();
   }
 
   window.addEventListener('focus', () => {
-    autoLoadCloudData('window focus');
+    autoSyncFromCloud('window focus');
   });
 
   document.addEventListener('visibilitychange', () => {
-    if(!document.hidden){
-      autoLoadCloudData('tab visible');
-    }
+    if (!document.hidden) autoSyncFromCloud('tab visible');
   });
 
-  // Light refresh only. This avoids needing Master/Load but does not spam Firebase.
   setInterval(() => {
-    if(Date.now() - lastAutoSync > 25000){
-      autoLoadCloudData('timer');
-    }
+    autoSyncFromCloud('timer');
   }, 30000);
 })();
 </script>
+  
   
 </body>
 </html>
