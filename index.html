@@ -749,9 +749,16 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
             Last watched: <strong id="lw-text-en">—</strong>
           </div>
 <div class="auto-save-note">
+  <span class="ts-label">Stopped time</span>
+  <input
+    class="ts-input"
+    id="manual-time-en"
+    placeholder="30:47"
+    inputmode="numeric"
+  />
   <button class="ts-save-btn" onclick="manualSaveProgress('en')">💾 Save Progress</button>
   <span class="auto-save-pill" id="auto-save-pill-en">Manual save</span>
-  <span class="auto-save-hint" id="auto-save-hint-en">Click Save Progress to update Firebase with the current season, episode, and stopped time.</span>
+  <span class="auto-save-hint" id="auto-save-hint-en">Enter time like 30:47 or 1:02:15, then click Save Progress.</span>
   <span class="ts-saved-flash" id="manual-save-flash-en">Saved to Firebase</span>
 </div>
         </div>
@@ -1319,6 +1326,11 @@ async function updateLastWatched(tmdbId, currentSeason, currentEp) {
 hint.textContent = saved
   ? `Last manually saved at ${saved.ts}. Click Save Progress to update Firebase again.`
   : 'Click Save Progress to update Firebase with your current stopped time.';
+
+    const manualBox = document.getElementById('manual-time-en');
+if (manualBox && saved) {
+  manualBox.value = saved.stoppedAt || saved.ts || formatWatchTime(saved.seconds || 0);
+}
   }
 }
 
@@ -2075,32 +2087,56 @@ function saveCurrentWatchPosition() {
 async function manualSaveProgress(lang) {
   const current = calculateCurrentWatchPosition();
 
-  if (!current || !current.movie) {
-    alert('Play a movie or episode first, then click Save Progress.');
+  const m = selMovie[lang] || current?.movie;
+  if (!m) {
+    alert('Search and select a movie or episode first.');
     return;
   }
 
-  if (current.lang !== lang) {
-    alert('Save from the tab where the video is currently playing.');
-    return;
+  const isTV = m.type === 'tv';
+
+  const season = isTV
+    ? parseInt(document.getElementById('s-' + lang)?.value || current?.season || 1)
+    : null;
+
+  const ep = isTV
+    ? parseInt(document.getElementById('e-' + lang)?.value || current?.ep || 1)
+    : null;
+
+  const manualInput = document.getElementById('manual-time-' + lang);
+  const typedTime = manualInput ? manualInput.value.trim() : '';
+
+  let seconds;
+
+  if (typedTime) {
+    seconds = parseTsToSeconds(typedTime);
+
+    if (!seconds && typedTime !== '0' && typedTime !== '0:00') {
+      alert('Enter time like 30:47 or 1:02:15.');
+      return;
+    }
+  } else if (current) {
+    seconds = current.seconds;
+  } else {
+    seconds = 0;
   }
 
-  await setSavedTimestamp(
-    current.lang,
-    current.movie,
-    current.seconds,
-    current.season,
-    current.ep
-  );
+  await setSavedTimestamp(lang, m, seconds, season, ep);
 
-  activeWatchSession.baseSeconds = current.seconds;
-  activeWatchSession.startedAt = Date.now();
+  if (activeWatchSession && activeWatchSession.lang === lang) {
+    activeWatchSession.baseSeconds = seconds;
+    activeWatchSession.startedAt = Date.now();
+    activeWatchSession.season = season;
+    activeWatchSession.ep = ep;
+  }
+
+  if (manualInput) manualInput.value = formatWatchTime(seconds);
 
   const flash = document.getElementById('manual-save-flash-' + lang);
   if (flash) {
-    flash.textContent = 'Saved to Firebase at ' + formatWatchTime(current.seconds);
+    flash.textContent = `Saved to Firebase: ${isTV ? `S${season} E${ep} · ` : ''}${formatWatchTime(seconds)}`;
     flash.classList.add('on');
-    setTimeout(() => flash.classList.remove('on'), 2500);
+    setTimeout(() => flash.classList.remove('on'), 3000);
   }
 
   setHeaderSyncStatus('synced', 'Saved');
