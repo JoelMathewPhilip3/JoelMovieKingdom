@@ -650,7 +650,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
   </div>
 </div>
 
-<!-- CLOUD SYNC SETUP REMOVED: sync room is hardcoded to cloud sync  -->
+<!-- CLOUD SYNC SETUP -->
 <div id="cloud-sync-box" class="collapsed" aria-hidden="true"></div>
 
 <!-- MAIN -->
@@ -1502,6 +1502,13 @@ async function pickMovie(item,lang){
   selMovie[lang]=movie;
   const isTV = item.media_type==='tv';
   document.getElementById('sc-'+lang).classList.toggle('on', isTV);
+  if(isTV){
+    const progress = await getSavedTimestamp(movie.tmdbId, lang);
+    if(progress){
+      document.getElementById('s-'+lang).value = progress.season || 1;
+      document.getElementById('e-'+lang).value = progress.episode || progress.ep || 1;
+    }
+  }
 
   if (lang === 'en' && isTV) {
     const s = parseInt(document.getElementById('s-en').value) || 1;
@@ -1525,7 +1532,7 @@ function playMovie(lang){
   const ep=document.getElementById('e-'+lang).value||1;
   let src=buildSrc(lang,m,isTV,s,ep);
   const savedPos = getLocalTimestamp(m.tmdbId, lang);
-  const canResumeThisEp = !isTV || !savedPos || (String(savedPos.season || '') === String(s) && String(savedPos.ep || '') === String(ep));
+  const canResumeThisEp = !isTV || !savedPos || (String(savedPos.season || '') === String(s) && String((savedPos.episode || savedPos.ep) || '') === String(ep));
   if (canResumeThisEp) src = addResumeParamToUrl(src, savedPos?.seconds || parseTsToSeconds(savedPos?.ts));
   document.getElementById('vf-'+lang).src=src;
   startWatchSession(lang, m, isTV ? s : null, isTV ? ep : null);
@@ -1743,26 +1750,24 @@ function showConverter(vid,thumb,title){
 }
 
 /* ================================================
-   CLOUD SYNC - FIXED ROOM 0530
+   CLOUD SYNC - CLEAN FIREBASE CATEGORY + PROGRESS SYNC
    ================================================ */
 const DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
-const FIXED_SYNC_PIN = '0530';
+const CLOUD_ROOM = 'mainSync';
 function getCloudUrl(){
   const url = String(DEFAULT_CLOUD_URL || '').trim();
   if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') return '';
   return url.replace(/\/+$/,'');
 }
-function getCloudPin(){ return FIXED_SYNC_PIN; }
 function cloudReady(){ return !!getCloudUrl(); }
-function sanitizeFirebaseKey(key){ return String(key).replace(/[.#$\[\]\/]/g,'_'); }
-function simpleHash(str){
-  let h=2166136261;
-  for(let i=0;i<String(str).length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
-  return (h>>>0).toString(36);
-}
-function cloudPath(key){
-  const room = sanitizeFirebaseKey(simpleHash(FIXED_SYNC_PIN));
-  return `${getCloudUrl()}/movieKingdom/${room}/${sanitizeFirebaseKey(key)}.json`;
+function sanitizeFirebaseKey(key){ return String(key ?? '').replace(/[.#$\[\]]/g,'_'); }
+function cloudPath(path){
+  const cleanPath = String(path || '')
+    .split('/')
+    .filter(Boolean)
+    .map(sanitizeFirebaseKey)
+    .join('/');
+  return `${getCloudUrl()}/movieKingdom/${sanitizeFirebaseKey(CLOUD_ROOM)}/${cleanPath}.json`;
 }
 function updateHeaderSyncStatus(status){
   const pill=document.getElementById('header-sync-pill');
@@ -1773,29 +1778,29 @@ function updateHeaderSyncStatus(status){
   dot.className='fixed-sync-dot' + (status==='syncing'?' anim':'');
   text.textContent = status==='syncing' ? 'Syncing…' : status==='error' ? 'Sync offline' : '✓ Synced';
 }
-async function cloudGet(key) {
+async function cloudGet(path) {
   if(!cloudReady()) return null;
   try {
-    const r = await fetch(cloudPath(key), { method:'GET', cache:'no-store' });
-    if(!r.ok) throw new Error('Cloud read failed');
+    const r = await fetch(cloudPath(path), { method:'GET', cache:'no-store' });
+    if(!r.ok) throw new Error('Cloud read failed: '+r.status);
     return await r.json();
   } catch(e) { console.warn('[Cloud Sync] read failed', e); updateHeaderSyncStatus('error'); return null; }
 }
-async function cloudSet(key, val) {
+async function cloudSet(path, val) {
   if(!cloudReady()) return;
   try {
     updateHeaderSyncStatus('syncing');
-    const r = await fetch(cloudPath(key), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) });
-    if(!r.ok) throw new Error('Cloud save failed');
+    const r = await fetch(cloudPath(path), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) });
+    if(!r.ok) throw new Error('Cloud save failed: '+r.status);
     updateHeaderSyncStatus('synced');
   } catch(e) { console.warn('[Cloud Sync] save failed', e); updateHeaderSyncStatus('error'); throw e; }
 }
-async function cloudDelete(key) {
+async function cloudDelete(path) {
   if(!cloudReady()) return;
   try {
     updateHeaderSyncStatus('syncing');
-    const r = await fetch(cloudPath(key), { method:'DELETE' });
-    if(!r.ok) throw new Error('Cloud delete failed');
+    const r = await fetch(cloudPath(path), { method:'DELETE' });
+    if(!r.ok) throw new Error('Cloud delete failed: '+r.status);
     updateHeaderSyncStatus('synced');
   } catch(e) { console.warn('[Cloud Sync] delete failed', e); updateHeaderSyncStatus('error'); throw e; }
 }
@@ -1803,13 +1808,17 @@ function updateCloudSyncState(msg, cls='') { updateHeaderSyncStatus(cls==='cloud
 function refreshCloudSyncState(){ updateHeaderSyncStatus(cloudReady()?'synced':'error'); }
 function toggleCloudSyncBox(){ refreshCloudSyncState(); }
 async function saveCloudSyncSettings(e){ e?.stopPropagation?.(); await syncNow(e); }
-function clearCloudSyncSettings(e){ e?.stopPropagation?.(); alert('Sync is fixed to 0530 now, so there is no local-only mode.'); }
+function clearCloudSyncSettings(e){ e?.stopPropagation?.(); alert('Cloud sync stays on for this website.'); }
 async function syncNow(e){
   e?.stopPropagation?.();
   if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
   updateHeaderSyncStatus('syncing');
   try {
-    for (const lang of ['en','hi','ta','yt']) { await loadFromCloud(lang); await loadWatchlistFromCloud(lang); }
+    for (const lang of ['en','hi','ta','yt']) {
+      await loadFromCloud(lang);
+      await loadWatchlistFromCloud(lang);
+    }
+    if(typeof loadAllProgressFromCloud === 'function') await loadAllProgressFromCloud();
     updateHeaderSyncStatus('synced');
   } catch(err) { updateHeaderSyncStatus('error'); }
 }
@@ -1819,133 +1828,14 @@ window.clearCloudSyncSettings=clearCloudSyncSettings;
 window.syncNow=syncNow;
 
 
-function showMasterSyncMessage(kind, msg){
-  // Status box removed by request; keep function so upload/load logic still works.
-  console.log(msg || (kind==='ok' ? 'Master worked' : 'Master not worked'));
-}
-function setMasterButtonsBusy(isBusy){
-  ['make-master-btn','load-master-btn'].forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){ b.disabled=!!isBusy; b.style.opacity=isBusy?'.6':''; b.style.cursor=isBusy?'wait':''; }
-  });
-}
-function refreshAllMovieViews(){
-  for(const lang of ['en','hi','ta','yt']){
-    try{ renderRecent(lang); }catch(e){}
-    try{ renderContinueWatching(lang); }catch(e){}
-    try{ renderWatchlist(lang); }catch(e){}
-  }
-  try{ if(typeof renderPremiumHome==='function') renderPremiumHome(); }catch(e){}
-}
-function countMasterDataSnapshot(){
-  const langs=['en','hi','ta','yt'];
-  let recent=0, watch=0;
-  langs.forEach(lang=>{ recent += (getR(lang)||[]).length; if(lang!=='yt') watch += (getW(lang)||[]).length; });
-  return {recent, watch};
-}
-function stableJson(v){
-  return JSON.stringify(v ?? null);
-}
-async function cloudSetVerified(key, val){
-  await cloudSet(key, val);
-  const back = await cloudGet(key);
-  if(stableJson(back) !== stableJson(val)){
-    throw new Error('Cloud verification failed for '+key);
-  }
-  return back;
-}
-async function cloudGetRequired(key){
-  const val = await cloudGet(key);
-  if(val === null || typeof val === 'undefined') throw new Error('Cloud read returned empty for '+key);
-  return val;
-}
-
-async function makeThisDeviceSourceOfTruth(e){
-  e?.stopPropagation?.();
-  if(!cloudReady()){ updateHeaderSyncStatus('error'); showMasterSyncMessage('bad','✕ Firebase URL is missing in the code.'); alert('Firebase URL is missing in the code.'); return; }
-  if(!confirm('This will overwrite the cloud sync with THIS device data. Use this on your laptop if your laptop has the correct movies. Continue?')) return;
-  setMasterButtonsBusy(true);
-  updateHeaderSyncStatus('syncing');
-  showMasterSyncMessage('work','Uploading laptop/source data to cloud sync…');
-  try{
-    for(const lang of ['en','hi','ta','yt']){
-      await cloudSetVerified(syncKey(lang), getR(lang));
-      if(lang !== 'yt') await cloudSetVerified(watchSyncKey(lang), getW(lang));
-    }
-    // Also upload every saved timestamp from this device.
-    const tsPrefix = `sv_ts_${currentUser}_`;
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(!k || !k.startsWith(tsPrefix)) continue;
-      try{
-        const parts = k.split('_');
-        const lang = parts[3];
-        const tmdbId = parts.slice(4).join('_');
-        const val = JSON.parse(localStorage.getItem(k));
-        if(lang && tmdbId) await cloudSetVerified(tsCloudKey(tmdbId, lang), val);
-      }catch(err){}
-    }
-    refreshAllMovieViews();
-    const c=countMasterDataSnapshot();
-    updateHeaderSyncStatus('synced');
-    showMasterSyncMessage('ok',`✓ Master upload verified. Cloud sync now has ${c.recent} recent items and ${c.watch} watchlist items from this device.`);
-    alert(`✓ Master upload verified. Cloud room 0530 now has ${c.recent} recent items and ${c.watch} watchlist items. Now open the phone and tap Load master data.`);
-  }catch(err){
-    console.warn('[Cloud Sync] source upload failed', err);
-    updateHeaderSyncStatus('error');
-    showMasterSyncMessage('bad','✕ Master upload failed or could not be verified. Check Firebase rules/internet, then try again.');
-    alert('Upload failed or could not be verified. Check Firebase rules/internet connection.');
-  }finally{
-    setMasterButtonsBusy(false);
-  }
-}
-
-async function replaceThisDeviceFromCloud(e){
-  e?.stopPropagation?.();
-  if(!cloudReady()){ updateHeaderSyncStatus('error'); showMasterSyncMessage('bad','✕ Firebase URL is missing in the code.'); alert('Firebase URL is missing in the code.'); return; }
-  if(!confirm('This will replace THIS device local movies/watchlists with the master cloud data from 0530. Continue?')) return;
-  setMasterButtonsBusy(true);
-  updateHeaderSyncStatus('syncing');
-  showMasterSyncMessage('work','Loading verified master data from cloud room 0530…');
-  try{
-    let totalRecent=0, totalWatch=0;
-    for(const lang of ['en','hi','ta','yt']){
-      const recent = await cloudGetRequired(syncKey(lang));
-      if(!Array.isArray(recent)) throw new Error('Cloud recent data is not an array for '+lang);
-      setRLocal(lang, recent);
-      totalRecent += recent.length;
-      if(lang !== 'yt'){
-        const watch = await cloudGetRequired(watchSyncKey(lang));
-        if(!Array.isArray(watch)) throw new Error('Cloud watchlist data is not an array for '+lang);
-        setWLocal(lang, watch);
-        totalWatch += watch.length;
-      }
-    }
-    refreshAllMovieViews();
-    updateHeaderSyncStatus('synced');
-    showMasterSyncMessage('ok',`✓ Master data loaded. This device now has ${totalRecent} recent items and ${totalWatch} watchlist items from room 0530.`);
-    alert(`✓ Master data loaded. This device now has ${totalRecent} recent items and ${totalWatch} watchlist items from room 0530.`);
-  }catch(err){
-    console.warn('[Cloud Sync] source download failed', err);
-    updateHeaderSyncStatus('error');
-    showMasterSyncMessage('bad','✕ Load failed. The phone did not replace its data because the cloud read could not be verified.');
-    alert('Download failed or could not be verified. Check Firebase rules/internet connection.');
-  }finally{
-    setMasterButtonsBusy(false);
-  }
-}
-
-window.makeThisDeviceSourceOfTruth = makeThisDeviceSourceOfTruth;
-window.replaceThisDeviceFromCloud = replaceThisDeviceFromCloud;
-
-function syncKey(lang) { return `recent__${currentUser}__${lang}`; }
+function syncKey(lang) { return `recent/${lang}`; }
 
 function rKey(lang){return `sv_r_${currentUser}_${lang}`;}
 function getR(lang){try{return JSON.parse(localStorage.getItem(rKey(lang))||'[]');}catch{return[];}}
 function setRLocal(lang,a){localStorage.setItem(rKey(lang),JSON.stringify(a));}
 
 function wKey(lang){return `sv_w_${currentUser}_${lang}`;}
-function watchSyncKey(lang){return `watchlist__${currentUser}__${lang}`;}
+function watchSyncKey(lang){return `watchlist/${lang}`;}
 function getW(lang){try{return JSON.parse(localStorage.getItem(wKey(lang))||'[]');}catch{return[];}}
 function setWLocal(lang,a){localStorage.setItem(wKey(lang),JSON.stringify(a));}
 
@@ -2007,8 +1897,9 @@ function playFromWatchlist(lang,idx){
   document.getElementById('srch-'+lang).value=m.title;
   document.getElementById('sc-'+lang).classList.toggle('on',m.type==='tv');
   if(m.type==='tv'){
-    document.getElementById('s-'+lang).value=1;
-    document.getElementById('e-'+lang).value=1;
+    const progress = getLocalTimestamp(m.tmdbId, lang);
+    document.getElementById('s-'+lang).value = progress?.season || 1;
+    document.getElementById('e-'+lang).value = progress?.episode || progress?.ep || 1;
   }
   updateEinthusan(lang,m.title);
   switchTab(lang);
@@ -2112,22 +2003,27 @@ function formatWatchTime(totalSeconds) {
   return `${m}:${String(s).padStart(2,'0')}`;
 }
 function getTsKey(tmdbId, lang='en') { return `sv_ts_${currentUser}_${lang}_${tmdbId}`; }
-function tsCloudKey(tmdbId, lang='en') { return `ts__${currentUser}__${lang}__${tmdbId}`; }
+function tsCloudKey(tmdbId, lang='en') { return `progress/${lang}/${tmdbId}`; }
 function getLocalTimestamp(tmdbId, lang='en') {
   try { return JSON.parse(localStorage.getItem(getTsKey(tmdbId, lang))); } catch { return null; }
 }
 async function setSavedTimestamp(lang, movie, seconds, season, ep) {
   if (!movie) return;
   const data = {
-    season: season ? parseInt(season) : null,
-    ep: ep ? parseInt(ep) : null,
-    seconds: Math.max(0, Math.floor(seconds || 0)),
-    ts: formatWatchTime(seconds || 0),
-    saved: Date.now(),
+    tmdbId: movie.tmdbId || '',
     title: movie.title || '',
     type: movie.type || '',
     poster: movie.poster || '',
-    year: movie.year || ''
+    year: movie.year || '',
+    lang,
+    season: season ? parseInt(season) : null,
+    episode: ep ? parseInt(ep) : null,
+    ep: ep ? parseInt(ep) : null,
+    seconds: Math.max(0, Math.floor(seconds || 0)),
+    ts: formatWatchTime(seconds || 0),
+    stoppedAt: formatWatchTime(seconds || 0),
+    updatedAt: Date.now(),
+    saved: Date.now()
   };
   localStorage.setItem(getTsKey(movie.tmdbId, lang), JSON.stringify(data));
   try { await cloudSet(tsCloudKey(movie.tmdbId, lang), data); } catch(e) {}
@@ -2150,6 +2046,8 @@ function startWatchSession(lang, movie, season=null, ep=null) {
     baseSeconds: startSeconds || 0,
     startedAt: Date.now()
   };
+  // Save selected season/episode immediately so other devices know what you opened.
+  setSavedTimestamp(lang, movie, startSeconds || 0, season, ep);
 }
 function saveCurrentWatchPosition() {
   if (!activeWatchSession) return;
@@ -2192,6 +2090,21 @@ async function getSavedTimestamp(tmdbId, lang='en') {
   return getLocalTimestamp(tmdbId, lang);
 }
 
+async function loadAllProgressFromCloud(){
+  try{
+    const progress = await cloudGet('progress');
+    if(!progress || typeof progress !== 'object') return;
+    Object.keys(progress).forEach(lang => {
+      const byTitle = progress[lang];
+      if(!byTitle || typeof byTitle !== 'object') return;
+      Object.keys(byTitle).forEach(tmdbId => {
+        const data = byTitle[tmdbId];
+        if(data) localStorage.setItem(getTsKey(tmdbId, lang), JSON.stringify(data));
+      });
+    });
+  }catch(e){ console.warn('[Progress Sync] load failed', e); }
+}
+
 /* ================================================
    CONTINUE WATCHING CARD
    ================================================ */
@@ -2214,10 +2127,14 @@ function renderContinueWatching(lang) {
   document.getElementById('cw-title-en').textContent = m.title;
   const isTV = m.type === 'tv';
   let meta = m.year || '';
-  if (isTV && m.epInfo) meta += ` · S${m.epInfo.s} E${m.epInfo.ep}`;
+  const tsData = (() => { try { return JSON.parse(localStorage.getItem(getTsKey(m.tmdbId, lang))); } catch { return null; } })();
+  if (isTV) {
+    const showSeason = tsData?.season || m.epInfo?.s;
+    const showEp = tsData?.episode || tsData?.ep || m.epInfo?.ep;
+    if (showSeason && showEp) meta += ` · S${showSeason} E${showEp}`;
+  }
   document.getElementById('cw-meta-en').textContent = meta || (isTV ? 'Series' : 'Movie');
-  const tsData = (() => { try { return JSON.parse(localStorage.getItem(getTsKey(m.tmdbId))); } catch { return null; } })();
-  document.getElementById('cw-ts-en').textContent = tsData ? `⏱ Stopped at ${tsData.ts}` : '';
+  document.getElementById('cw-ts-en').textContent = tsData ? `⏱ Stopped at ${tsData.ts || tsData.stoppedAt || '0:00'}` : '';
   if (m.poster) {
     const img = document.getElementById('cw-poster-en');
     img.src = m.poster;
@@ -2239,10 +2156,13 @@ function cwResume(lang) {
   } else {
     selMovie[lang] = m;
     document.getElementById('srch-'+lang).value = m.title;
-    if (m.type === 'tv' && m.epInfo) {
+    if (m.type === 'tv') {
+      const progress = getLocalTimestamp(m.tmdbId, lang);
+      const resumeSeason = progress?.season || m.epInfo?.s || 1;
+      const resumeEp = progress?.episode || progress?.ep || m.epInfo?.ep || 1;
       document.getElementById('sc-'+lang).classList.add('on');
-      document.getElementById('s-'+lang).value = m.epInfo.s;
-      document.getElementById('e-'+lang).value = m.epInfo.ep;
+      document.getElementById('s-'+lang).value = resumeSeason;
+      document.getElementById('e-'+lang).value = resumeEp;
     }
     switchTab(lang);
     playMovie(lang);
@@ -2875,196 +2795,75 @@ if ('caches' in window) {
 })();
 </script>
 
-  <script>
-/* ========== CLEAN CATEGORY FIREBASE SYNC ========== */
+
+
+<script>
+/* ========== AUTO CLOUD SYNC - CATEGORY + PROGRESS ========== */
 (function(){
   'use strict';
 
-  const DB_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
-  const CLOUD_ROOM = 'mainSync';
-  const USER = 'Joel';
-  const LANGS = ['en', 'hi', 'ta', 'yt'];
+  const AUTO_SYNC_LANGS = ['en','hi','ta','yt'];
+  let autoSyncBusy = false;
+  let lastAutoSync = 0;
 
-  function cleanKey(key){
-    return String(key || '').replace(/[.#$\[\]\/]/g, '_');
-  }
-
-  function firebasePath(path){
-    const cleanParts = String(path || '')
-      .split('/')
-      .filter(Boolean)
-      .map(cleanKey)
-      .join('/');
-
-    return `${DB_URL.replace(/\/+$/, '')}/movieKingdom/${CLOUD_ROOM}/${cleanParts}.json`;
-  }
-
-  window.cloudReady = function(){
-    return !!DB_URL && DB_URL.includes('firebaseio.com');
-  };
-
-  window.cloudGet = async function(path){
-    if (!window.cloudReady()) return null;
-
-    try {
-      updateHeaderSyncStatus('syncing');
-
-      const res = await fetch(firebasePath(path), {
-        method: 'GET',
-        cache: 'no-store'
-      });
-
-      if (!res.ok) throw new Error('Firebase read failed: ' + res.status);
-
-      const data = await res.json();
-      updateHeaderSyncStatus('synced');
-      return data;
-    } catch (err) {
-      console.warn('[Firebase Sync Read Failed]', err);
-      updateHeaderSyncStatus('error');
-      return null;
+  function autoRefreshMovieViews(){
+    for(const lang of AUTO_SYNC_LANGS){
+      try{ renderRecent(lang); }catch(e){}
+      try{ renderContinueWatching(lang); }catch(e){}
+      try{ renderWatchlist(lang); }catch(e){}
     }
-  };
-
-  window.cloudSet = async function(path, value){
-    if (!window.cloudReady()) return;
-
-    try {
-      updateHeaderSyncStatus('syncing');
-
-      const res = await fetch(firebasePath(path), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value)
-      });
-
-      if (!res.ok) throw new Error('Firebase write failed: ' + res.status);
-
-      updateHeaderSyncStatus('synced');
-    } catch (err) {
-      console.warn('[Firebase Sync Write Failed]', err);
-      updateHeaderSyncStatus('error');
-      throw err;
-    }
-  };
-
-  window.cloudDelete = async function(path){
-    if (!window.cloudReady()) return;
-
-    try {
-      updateHeaderSyncStatus('syncing');
-
-      const res = await fetch(firebasePath(path), {
-        method: 'DELETE'
-      });
-
-      if (!res.ok) throw new Error('Firebase delete failed: ' + res.status);
-
-      updateHeaderSyncStatus('synced');
-    } catch (err) {
-      console.warn('[Firebase Sync Delete Failed]', err);
-      updateHeaderSyncStatus('error');
-      throw err;
-    }
-  };
-
-  window.syncKey = function(lang){
-    return `recent/${lang}`;
-  };
-
-  window.watchSyncKey = function(lang){
-    return `watchlist/${lang}`;
-  };
-
-  window.tsCloudKey = function(tmdbId, lang = 'en'){
-    return `timestamps/${lang}/${tmdbId}`;
-  };
-
-  function updateHeaderSyncStatus(status){
-    const pill = document.getElementById('header-sync-pill');
-    const dot = document.getElementById('header-sync-dot');
-    const text = document.getElementById('header-sync-text');
-
-    if (!pill || !dot || !text) return;
-
-    pill.className = 'fixed-sync-pill ' +
-      (status === 'syncing' ? 'syncing' : status === 'error' ? 'error' : '');
-
-    dot.className = 'fixed-sync-dot' +
-      (status === 'syncing' ? ' anim' : '');
-
-    text.textContent =
-      status === 'syncing' ? 'Syncing…' :
-      status === 'error' ? 'Sync offline' :
-      '✓ Synced';
+    try{ if(typeof renderPremiumHome === 'function') renderPremiumHome(); }catch(e){}
   }
 
-  window.updateHeaderSyncStatus = updateHeaderSyncStatus;
+  async function autoLoadCloudData(reason){
+    if(autoSyncBusy) return;
 
-  function refreshAllViews(){
-    LANGS.forEach(lang => {
-      try { if (typeof renderRecent === 'function') renderRecent(lang); } catch(e) {}
-      try { if (typeof renderWatchlist === 'function') renderWatchlist(lang); } catch(e) {}
-      try { if (typeof renderContinueWatching === 'function') renderContinueWatching(lang); } catch(e) {}
-    });
-
-    try { if (typeof renderPremiumHome === 'function') renderPremiumHome(); } catch(e) {}
-  }
-
-  async function autoSyncFromCloud(reason){
-    if (!window.cloudReady()) {
-      updateHeaderSyncStatus('error');
+    if(typeof cloudReady === 'function' && !cloudReady()){
+      try{ updateHeaderSyncStatus('error'); }catch(e){}
       return;
     }
 
-    try {
+    autoSyncBusy = true;
+    lastAutoSync = Date.now();
+
+    try{
       updateHeaderSyncStatus('syncing');
 
-      for (const lang of LANGS) {
-        if (typeof loadFromCloud === 'function') {
-          await loadFromCloud(lang);
-        }
-
-        if (lang !== 'yt' && typeof loadWatchlistFromCloud === 'function') {
-          await loadWatchlistFromCloud(lang);
-        }
+      for(const lang of AUTO_SYNC_LANGS){
+        if(typeof loadFromCloud === 'function') await loadFromCloud(lang);
+        if(lang !== 'yt' && typeof loadWatchlistFromCloud === 'function') await loadWatchlistFromCloud(lang);
       }
 
-      refreshAllViews();
+      if(typeof loadAllProgressFromCloud === 'function') await loadAllProgressFromCloud();
+
+      autoRefreshMovieViews();
       updateHeaderSyncStatus('synced');
-      console.log('[Movie Kingdom Sync] completed:', reason || 'auto');
-    } catch (err) {
-      console.warn('[Movie Kingdom Sync] failed:', err);
-      updateHeaderSyncStatus('error');
+      console.log('[Auto Sync] Loaded cloud data:', reason || 'auto');
+    }catch(err){
+      console.warn('[Auto Sync] Failed:', err);
+      try{ updateHeaderSyncStatus('error'); }catch(e){}
+    }finally{
+      autoSyncBusy = false;
     }
   }
 
-  window.movieAutoSync = autoSyncFromCloud;
+  window.movieAutoSync = autoLoadCloudData;
 
-  function startSync(){
-    setTimeout(() => autoSyncFromCloud('page open'), 700);
+  function startAutoSync(){
+    setTimeout(() => autoLoadCloudData('page open'), 800);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startSync);
-  } else {
-    startSync();
-  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startAutoSync);
+  else startAutoSync();
 
-  window.addEventListener('focus', () => {
-    autoSyncFromCloud('window focus');
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) autoSyncFromCloud('tab visible');
-  });
+  window.addEventListener('focus', () => autoLoadCloudData('window focus'));
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) autoLoadCloudData('tab visible'); });
 
   setInterval(() => {
-    autoSyncFromCloud('timer');
+    if(Date.now() - lastAutoSync > 25000) autoLoadCloudData('timer');
   }, 30000);
 })();
 </script>
-  
   
 </body>
 </html>
