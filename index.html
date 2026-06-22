@@ -627,7 +627,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 
 </style>
 </head>
-<body>
+<body class="premium-hide-clear">
 
 <!-- SITE HEADER -->
 <div id="site-header">
@@ -640,30 +640,47 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 </div>
 </div>
 
-<!-- API BANNER -->
-<div id="api-banner">
-  <strong>One-time setup:</strong> A free TMDB API key powers all movie/TV search and posters. It takes ~2 min and never expires.<br>
-  → <a href="https://www.themoviedb.org/signup" target="_blank">Create free TMDB account</a> then: Settings → API → copy the <em>API Key (v3 auth)</em>
-  <div class="api-row">
-    <input type="text" id="api-key-input" placeholder="Paste TMDB API key here" />
-    <button onclick="saveKey()">Save &amp; Start</button>
-  </div>
-</div>
-
 <!-- CLOUD SYNC SETUP -->
 <div id="cloud-sync-box" class="collapsed" aria-hidden="true"></div>
 
 <!-- MAIN -->
 <div class="main">
   <div class="tabs">
-    <div class="tab active" data-tab="en" onclick="switchTab('en')">🇺🇸 English</div>
-    <div class="tab" data-tab="hi" onclick="switchTab('hi')">🇮🇳 Hindi</div>
-    <div class="tab" data-tab="ta" onclick="switchTab('ta')">🇮🇳 Malayalam / Hindi / Tamil</div>
+    <div class="tab active" data-tab="home" onclick="switchTab('home')">⌂ Home</div>
+    <div class="tab" data-tab="movies" onclick="switchTab('movies')">🎬 Movies</div>
     <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
+    <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>
   </div>
 
+  <!-- ========== HOME TAB ========== -->
+  <div class="tab-content active" id="tab-home">
+    <div class="premium-grid">
+      <div class="premium-card">
+        <div class="premium-card-title">Continue Watching <button class="premium-secondary" onclick="switchTab('movies')" style="padding:6px 10px;font-size:10px;">Open</button></div>
+        <div id="premium-continue"></div>
+      </div>
+      <div class="premium-card">
+        <div class="premium-card-title">All Languages Watchlist</div>
+        <div id="premium-watch-ta"></div>
+      </div>
+      <div class="premium-card">
+        <div class="premium-card-title">Recently Watched</div>
+        <div id="premium-recent-all"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MOVIES TAB ========== -->
+  <div class="tab-content" id="tab-movies">
+    <div class="premium-lang-tabs" id="premium-lang-tabs">
+      <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Hindi / Tamil</button>
+      <button data-lang="hi" onclick="selectPremiumMovieLang('hi')">Hindi</button>
+      <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
+    </div>
+    <div id="movie-host">
+
   <!-- ========== ENGLISH TAB ========== -->
-  <div class="tab-content active" id="tab-en">
+  <div class="tab-content premium-lang-section" id="tab-en">
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:0;">
       <div style="flex:2;min-width:260px;">
         <div class="sec-header">
@@ -1009,6 +1026,9 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     </div>
   </div>
 
+    </div><!-- end #movie-host -->
+  </div><!-- end #tab-movies -->
+
   <!-- ========== YOUTUBE TAB ========== -->
   <div class="tab-content" id="tab-yt">
     <div class="sec-header">
@@ -1061,6 +1081,17 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div class="conv-actions">
         <a class="conv-btn primary" id="conv-yout-btn" href="#" target="_blank">⬇ Download on yout.pw</a>
         <button class="conv-btn" id="conv-copy-btn" onclick="copyYtLink()">🔗 Copy YouTube Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SETTINGS TAB ========== -->
+  <div class="tab-content" id="tab-settings">
+    <div class="settings-grid">
+      <div class="settings-card">
+        <h3>Server Tools</h3>
+        <p>Add back any missing built-in servers and refresh the server buttons.</p>
+        <div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div>
       </div>
     </div>
   </div>
@@ -1996,10 +2027,9 @@ async function clearRecent(lang) {
 }
 
 /* ================================================
-   AUTOMATIC WATCH POSITION SAVE
-   Note: third-party movie iframes usually do not expose exact playback time.
-   This tracks elapsed watch time from when you press Play and saves it when
-   you close/leave/switch titles. YouTube resume uses its official start param.
+   MANUAL WATCH POSITION SAVE
+   Third-party movie iframes do not reliably expose exact playback time, so
+   the user can enter the stopped time and explicitly save it to Firebase.
    ================================================ */
 function parseTsToSeconds(ts) {
   if (!ts) return 0;
@@ -2024,7 +2054,7 @@ function getLocalTimestamp(tmdbId, lang='en') {
   try { return JSON.parse(localStorage.getItem(getTsKey(tmdbId, lang))); } catch { return null; }
 }
 async function setSavedTimestamp(lang, movie, seconds, season, ep) {
-  if (!movie) return;
+  if (!movie) return false;
   const data = {
     tmdbId: movie.tmdbId || '',
     title: movie.title || '',
@@ -2042,11 +2072,16 @@ async function setSavedTimestamp(lang, movie, seconds, season, ep) {
     saved: Date.now()
   };
   localStorage.setItem(getTsKey(movie.tmdbId, lang), JSON.stringify(data));
-  try { await cloudSet(tsCloudKey(movie.tmdbId, lang), data); } catch(e) {}
+  try {
+    await cloudSet(tsCloudKey(movie.tmdbId, lang), data);
+  } catch(e) {
+    return false;
+  }
   if (lang === 'en') {
     renderContinueWatching('en');
     if (movie.type === 'tv') updateLastWatched(movie.tmdbId, season, ep);
   }
+  return true;
 }
 function startWatchSession(lang, movie, season=null, ep=null) {
   saveCurrentWatchPosition();
@@ -2109,19 +2144,28 @@ async function manualSaveProgress(lang) {
   let seconds;
 
   if (typedTime) {
-    seconds = parseTsToSeconds(typedTime);
-
-    if (!seconds && typedTime !== '0' && typedTime !== '0:00') {
+    if (!/^\d+(?::[0-5]?\d){0,2}$/.test(typedTime)) {
       alert('Enter time like 30:47 or 1:02:15.');
       return;
     }
+    seconds = parseTsToSeconds(typedTime);
   } else if (current) {
     seconds = current.seconds;
   } else {
     seconds = 0;
   }
 
-  await setSavedTimestamp(lang, m, seconds, season, ep);
+  const savedToFirebase = await setSavedTimestamp(lang, m, seconds, season, ep);
+  if (!savedToFirebase) {
+    const flash = document.getElementById('manual-save-flash-' + lang);
+    if (flash) {
+      flash.textContent = 'Saved on this device, but Firebase did not update.';
+      flash.classList.add('on');
+      setTimeout(() => flash.classList.remove('on'), 4000);
+    }
+    updateHeaderSyncStatus('error');
+    return;
+  }
 
   if (activeWatchSession && activeWatchSession.lang === lang) {
     activeWatchSession.baseSeconds = seconds;
@@ -2139,7 +2183,7 @@ async function manualSaveProgress(lang) {
     setTimeout(() => flash.classList.remove('on'), 3000);
   }
 
-  setHeaderSyncStatus('synced', 'Saved');
+  updateHeaderSyncStatus('synced');
 }
 function addResumeParamToUrl(src, seconds) {
   seconds = Math.max(0, Math.floor(seconds || 0));
@@ -2475,7 +2519,7 @@ if ('caches' in window) {
 </script>
 
 <script>
-/* ========== PREMIUM APP SHELL PATCH ========== */
+/* ========== APP SHELL CONTROLLER ========== */
 (function(){
   const MOVIE_LANGS = ['ta','hi','en'];
   let premiumMovieLang = localStorage.getItem('premium_movie_lang') || 'ta';
@@ -2490,55 +2534,16 @@ if ('caches' in window) {
   function safePoster(m){ return m?.poster || ''; }
   function safeText(s){ return (window.escHtml ? escHtml(String(s||'')) : String(s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))); }
 
-  function createTab(id, html){
-    let el=document.getElementById(id);
-    if(!el){ el=document.createElement('div'); el.id=id; el.className='tab-content'; document.querySelector('.main').appendChild(el); }
-    el.innerHTML=html;
-    return el;
-  }
-
-  function setupShell(){
+  function initializeAppShell(){
     document.body.classList.add('premium-hide-clear');
     document.getElementById('api-banner')?.remove();
-    const tabs=document.querySelector('.tabs');
-    if(tabs){
-      tabs.innerHTML=`
-        <div class="tab active" data-tab="home" onclick="switchTab('home')">⌂ Home</div>
-        <div class="tab" data-tab="movies" onclick="switchTab('movies')">🎬 Movies</div>
-        <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
-        <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>`;
-    }
-
-    const home=createTab('tab-home', `
-      <div class="premium-grid">
-        <div class="premium-card"><div class="premium-card-title">Continue Watching <button class="premium-secondary" onclick="switchTab('movies')" style="padding:6px 10px;font-size:10px;">Open</button></div><div id="premium-continue"></div></div>
-        <div class="premium-card"><div class="premium-card-title">All Languages Watchlist</div><div id="premium-watch-ta"></div></div>
-        <div class="premium-card"><div class="premium-card-title">Recently Watched</div><div id="premium-recent-all"></div></div>
-      </div>`);
-
-    const movies=createTab('tab-movies', `
-      <div class="premium-lang-tabs" id="premium-lang-tabs">
-        <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Hindi / Tamil</button>
-        <button data-lang="hi" onclick="selectPremiumMovieLang('hi')">Hindi</button>
-        <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
-      </div>
-      <div id="movie-host"></div>`);
-
-    const settings=createTab('tab-settings', `
-      <div class="settings-grid">
-        <div class="settings-card"><h3>Server Tools</h3><p>Add back any missing built-in servers and refresh the server buttons.</p><div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div></div>
-      </div>`);
-
-    const host=document.getElementById('movie-host');
     MOVIE_LANGS.forEach(lang=>{
       const section=document.getElementById('tab-'+lang);
-      if(section && host && section.parentElement!==host){
-        section.classList.add('premium-lang-section');
-        ensureDetailBox(lang, section);
-        host.appendChild(section);
-      }
+      if(!section) return;
+      section.classList.add('premium-lang-section');
+      ensureDetailBox(lang, section);
     });
-    
+
     selectPremiumMovieLang(premiumMovieLang, true);
     switchTab('home');
   }
@@ -2751,11 +2756,17 @@ if ('caches' in window) {
     }
   };
 
-  window.addEventListener('load', function(){
-    setupShell();
+  function bootAppShell(){
+    initializeAppShell();
     renderPremiumHome();
     if(typeof updateAdvancedToolsButton === 'function') updateAdvancedToolsButton();
-  });
+  }
+
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAppShell, { once:true });
+  } else {
+    bootAppShell();
+  }
 })();
 </script>
 
