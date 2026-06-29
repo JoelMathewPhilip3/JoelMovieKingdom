@@ -1650,9 +1650,27 @@ function showConverter(vid,thumb,title){
 window.DEFAULT_CLOUD_URL = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
 window.CLOUD_ROOM = 'mainSync';
 function getCloudUrl(){
-  const url = String(window.DEFAULT_CLOUD_URL || '').trim();
-  if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') return '';
-  return url.replace(/\/+$/,'');
+  const fallbackUrl = 'https://joels-movie-kingdom-default-rtdb.firebaseio.com';
+  const candidates = [
+    window.DEFAULT_CLOUD_URL,
+    window.FIREBASE_DATABASE_URL,
+    window.firebaseDatabaseURL,
+    window.firebaseConfig && window.firebaseConfig.databaseURL,
+    localStorage.getItem('mk_cloud_url'),
+    localStorage.getItem('cloudSyncUrl'),
+    localStorage.getItem('movieKingdomCloudUrl'),
+    fallbackUrl
+  ];
+  for(const candidate of candidates){
+    const url = String(candidate || '').trim();
+    if(!url || url === 'PASTE_YOUR_FIREBASE_DATABASE_URL_HERE') continue;
+    if(!/^https:\/\/[^\s]+firebaseio\.com/i.test(url) && !/^https:\/\/[^\s]+firebasedatabase\.app/i.test(url)) continue;
+    const clean = url.replace(/\/+$/,'');
+    window.DEFAULT_CLOUD_URL = clean;
+    try{ localStorage.setItem('movieKingdomCloudUrl', clean); }catch(e){}
+    return clean;
+  }
+  return '';
 }
 function cloudReady(){
   return !!getCloudUrl();
@@ -1708,7 +1726,7 @@ async function saveCloudSyncSettings(e){ e?.stopPropagation?.(); await syncNow(e
 function clearCloudSyncSettings(e){ e?.stopPropagation?.(); alert('Cloud sync stays on for this website.'); }
 async function syncNow(e){
   e?.stopPropagation?.();
-  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing in the code.'); return; }
+  if(!cloudReady()){ updateHeaderSyncStatus('error'); alert('Firebase URL is missing. Add DEFAULT_CLOUD_URL near the Cloud Sync section.'); return; }
   updateHeaderSyncStatus('syncing');
   try {
     for (const lang of ['en','hi','ta','yt']) {
@@ -1779,8 +1797,8 @@ async function forceSaveToFirebase(e){
   e?.stopPropagation?.();
   if(!cloudReady()){
     updateHeaderSyncStatus('error');
-    setForceSaveNote('Firebase URL missing.', 'bad');
-    alert('Firebase URL is missing in the code.');
+    setForceSaveNote('Firebase URL missing. Add DEFAULT_CLOUD_URL near the Cloud Sync section.', 'bad');
+    alert('Firebase URL is missing. Add DEFAULT_CLOUD_URL near the Cloud Sync section.');
     return;
   }
   updateHeaderSyncStatus('syncing');
