@@ -506,9 +506,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .premium-mini img{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--surface3);display:block;}
 .premium-mini div{font-size:11px;padding:7px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .premium-empty{font-size:12px;color:var(--muted);line-height:1.55;}
-.premium-lang-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-.premium-lang-tabs button{background:var(--surface);border:1px solid var(--border);border-radius:999px;color:var(--muted);padding:8px 14px;font-size:12px;cursor:pointer;}
-.premium-lang-tabs button.active{color:var(--gold2);border-color:rgba(201,168,76,.45);background:rgba(201,168,76,.10);}
 #movie-host>.tab-content{display:none!important;}
 #movie-host>.tab-content.premium-visible{display:block!important;}
 #movie-host .sec-header .clear-btn,.premium-hide-clear .clear-btn{display:none!important;}
@@ -533,13 +530,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .sug-add-watch{border:1px solid rgba(201,168,76,.25);background:rgba(201,168,76,.08);color:var(--gold2);border-radius:999px;padding:5px 9px;font-size:10px;cursor:pointer;white-space:nowrap;}
 .sug-item.loading-card{height:72px;background:linear-gradient(90deg,var(--surface2),var(--surface3),var(--surface2));background-size:220% 100%;animation:premiumShimmer 1.15s linear infinite;border-radius:10px;margin:8px;}
 @keyframes premiumShimmer{to{background-position:-220% 0;}}
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
-.settings-card{background:var(--surface);border:1px solid rgba(201,168,76,.16);border-radius:18px;padding:18px;}
-.settings-card h3{font-family:'Cinzel',serif;color:var(--gold);font-size:14px;letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase;}
-.settings-card p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
-.settings-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.settings-actions button{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--text);font-size:12px;cursor:pointer;}
-.settings-actions button:hover{border-color:rgba(201,168,76,.45);color:var(--gold);}
 .premium-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;}
 .premium-toggle button{border:none;border-radius:999px;padding:7px 12px;background:var(--gold3);color:var(--gold2);cursor:pointer;}
 @media(max-width:640px){.premium-detail-content{flex-direction:column}.premium-detail-poster{width:96px}.premium-grid{grid-template-columns:1fr}.premium-hero{padding:22px}.tabs{overflow-x:auto;flex-wrap:nowrap}.tab{white-space:nowrap}}
@@ -625,6 +615,45 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 .master-sync-message{display:none!important;}
 @media(max-width:640px){#site-header{flex-wrap:nowrap!important;}#site-header .site-logo{min-width:0;}#site-header .user-area.single-user{width:auto!important;margin-left:auto!important;justify-content:flex-end!important;flex-wrap:nowrap!important;} .device-master-select{width:auto!important;max-width:210px;min-width:170px;}}
 
+
+/* ========== SIMPLIFIED MOVIES PATCH ========== */
+.movie-search-note{
+  background:var(--surface);border:1px solid rgba(201,168,76,.16);border-radius:14px;
+  padding:12px 16px;margin-bottom:16px;color:var(--muted);font-size:13px;line-height:1.55;
+}
+.server-tools-inline{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px 0;
+  background:var(--surface);border:1px solid rgba(201,168,76,.16);border-radius:12px;padding:10px 12px;
+}
+.server-find-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));border:none;border-radius:999px;
+  padding:8px 14px;color:#09090e;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;
+}
+.server-find-btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:500;}
+.server-find-btn.secondary:hover{border-color:rgba(201,168,76,.45);color:var(--gold);}
+.yt-url-wrap,#sug-yt{overflow:visible!important;}
+#sug-yt:not(:empty){display:block!important;min-height:40px;}
+@media(max-width:640px){.server-find-btn{flex:1;}.movie-search-note{font-size:12px;}}
+
+
+/* ========== FORCE FIREBASE SAVE BUTTON ========== */
+.sync-stack{
+  display:flex;flex-direction:column;gap:7px;align-items:flex-end;
+}
+.force-save-btn{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));border:none;border-radius:999px;
+  padding:7px 13px;color:#09090e;font-size:11px;font-weight:800;cursor:pointer;
+  font-family:'DM Sans',sans-serif;letter-spacing:.2px;box-shadow:0 8px 22px rgba(0,0,0,.18);
+}
+.force-save-btn:hover{opacity:.9;transform:translateY(-1px);}
+.force-save-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.force-save-note{font-size:10px;color:var(--muted);min-height:13px;text-align:right;max-width:220px;line-height:1.3;}
+.force-save-note.ok{color:#4caf82;}
+.force-save-note.bad{color:#f07a7c;}
+.force-save-note.work{color:var(--gold);}
+@media(max-width:640px){.sync-stack{align-items:flex-end}.force-save-note{display:none}.force-save-btn{padding:7px 10px;font-size:10px;}}
+
+
 </style>
 </head>
 <body class="premium-hide-clear">
@@ -633,9 +662,13 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 <div id="site-header">
   <div class="site-logo">👑 Joel's Movie Kingdom</div>
 <div class="user-area single-user">
-  <div class="fixed-sync-pill syncing" id="header-sync-pill">
-    <span class="fixed-sync-dot anim" id="header-sync-dot"></span>
-    <span id="header-sync-text">Syncing…</span>
+  <div class="sync-stack">
+    <div class="fixed-sync-pill syncing" id="header-sync-pill">
+      <span class="fixed-sync-dot anim" id="header-sync-dot"></span>
+      <span id="header-sync-text">Syncing…</span>
+    </div>
+    <button class="force-save-btn" id="force-firebase-save-btn" onclick="forceSaveToFirebase(event)">💾 Force Save to Firebase</button>
+    <div class="force-save-note" id="force-save-note"></div>
   </div>
 </div>
 </div>
@@ -649,7 +682,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     <div class="tab active" data-tab="home" onclick="switchTab('home')">⌂ Home</div>
     <div class="tab" data-tab="movies" onclick="switchTab('movies')">🎬 Movies</div>
     <div class="tab" data-tab="yt" onclick="switchTab('yt')">▶ YouTube</div>
-    <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>
   </div>
 
   <!-- ========== HOME TAB ========== -->
@@ -660,8 +692,8 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
         <div id="premium-continue"></div>
       </div>
       <div class="premium-card">
-        <div class="premium-card-title">All Languages Watchlist</div>
-        <div id="premium-watch-ta"></div>
+        <div class="premium-card-title">My Watchlist</div>
+        <div id="premium-watch-en"></div>
       </div>
       <div class="premium-card">
         <div class="premium-card-title">Recently Watched</div>
@@ -672,11 +704,7 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 
   <!-- ========== MOVIES TAB ========== -->
   <div class="tab-content" id="tab-movies">
-    <div class="premium-lang-tabs" id="premium-lang-tabs">
-      <button data-lang="ta" onclick="selectPremiumMovieLang('ta')">Malayalam / Hindi / Tamil</button>
-      <button data-lang="hi" onclick="selectPremiumMovieLang('hi')">Hindi</button>
-      <button data-lang="en" onclick="selectPremiumMovieLang('en')">English</button>
-    </div>
+    <div class="movie-search-note">Search any movie or series here. You can search English, Malayalam, Hindi, Tamil, or any other language title in the same box.</div>
     <div id="movie-host">
 
   <!-- ========== ENGLISH TAB ========== -->
@@ -791,6 +819,12 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div class="np-star" id="nps-en"></div>
     </div>
 
+    <div class="server-tools-inline">
+      <button class="server-find-btn" id="find-servers-btn" onclick="findNewServers()">🔎 Find new servers</button>
+      <button class="server-find-btn secondary" onclick="testAllServers('en')">⚡ Test servers</button>
+      <button class="server-find-btn secondary" onclick="toggleSrvPanel('en')">⚙ Manage servers</button>
+    </div>
+
     <!-- Server button bar above player -->
     <div class="srv-btn-bar" id="srv-btn-bar-en">
       <span class="srv-bar-label">Server:</span>
@@ -834,194 +868,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="srv-act-btn secondary" onclick="resetServers('en')">↺ Reset to Defaults</button>
           <button class="srv-act-btn secondary" onclick="autoRemoveBroken('en')">🗑 Remove Red Servers</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== HINDI TAB ========== -->
-  <div class="tab-content" id="tab-hi">
-    <div class="sec-header">
-      <div class="sec-title">Recently Watched</div>
-      <button class="clear-btn" onclick="clearRecent('hi')">Clear</button>
-    </div>
-    <div id="recent-grid-hi"></div>
-    <div class="no-recent" id="no-recent-hi">Nothing watched yet.</div>
-    <div class="watchlist-sec">
-      <div class="sec-header">
-        <div class="sec-title">My Watchlist</div>
-        <button class="clear-btn" onclick="clearWatchlist('hi')">Clear</button>
-      </div>
-      <div class="watch-grid" id="watch-grid-hi"></div>
-    </div>
-    <div class="search-sec">
-      <div class="section-label">Search Hindi Movie or Series</div>
-      <div class="search-row">
-        <div class="srch-wrap">
-          <input type="text" id="srch-hi" placeholder="Type title…" autocomplete="off" />
-          <div id="sug-hi"></div>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="series-ctrl" id="sc-hi">
-          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
-            <input type="number" class="num-in" id="s-hi" value="1" min="1" /></div>
-          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
-            <input type="number" class="num-in" id="e-hi" value="1" min="1" /></div>
-        </div>
-        <button class="play-btn" onclick="playMovie('hi')">▶ Play</button>
-      </div>
-    </div>
-    <div class="now-bar" id="nb-hi">
-      <img class="np-img" id="npi-hi" src="" alt="" />
-      <div class="np-det"><div class="np-title" id="npt-hi"></div><div class="np-meta" id="npm-hi"></div></div>
-      <div class="np-star" id="nps-hi"></div>
-    </div>
-
-    <!-- Server button bar above player -->
-    <div class="srv-btn-bar" id="srv-btn-bar-hi">
-      <span class="srv-bar-label">Server:</span>
-      <div id="srv-pills-hi" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-      <div class="srv-bar-sep"></div>
-      <div class="srv-bar-actions">
-        <button class="srv-bar-test" onclick="testAllServers('hi')">⚡ Test</button>
-        <button class="srv-bar-manage" onclick="toggleSrvPanel('hi')">⚙ Manage</button>
-      </div>
-    </div>
-
-    <div class="player-outer" id="po-hi">
-      <div class="player-stage default" id="ps-hi">
-        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-hi" allowfullscreen referrerpolicy="origin" allow="autoplay; fullscreen; encrypted-media"></iframe></div>
-      </div>
-      <div class="player-controls">
-        <div class="view-btns">
-          <button class="vbtn active" onclick="setView('hi','default',this)">Default</button>
-          <button class="vbtn" onclick="setView('hi','theatre',this)">Theatre</button>
-          <button class="vbtn" onclick="fsPlayer('hi')">⛶ Fullscreen</button>
-        </div>
-      </div>
-      <div class="srv-panel" id="srv-panel-hi">
-        <div class="srv-panel-title">Server Manager</div>
-        <div class="srv-list" id="srv-list-hi"></div>
-        <div class="add-srv-row">
-          <input class="add-srv-inp" id="add-srv-name-hi" placeholder="Server name" />
-          <input class="add-srv-inp" id="add-srv-movie-hi" placeholder="Movie URL (use {id})" />
-          <input class="add-srv-inp" id="add-srv-tv-hi" placeholder="TV URL (use {id},{s},{e})" />
-          <button class="add-srv-btn" onclick="addCustomServer('hi')">＋ Add</button>
-        </div>
-        <div class="srv-panel-actions" style="margin-top:12px;">
-          <button class="srv-act-btn" onclick="testAllServers('hi')">⚡ Test All Servers</button>
-          <button class="srv-act-btn secondary" onclick="resetServers('hi')">↺ Reset to Defaults</button>
-          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('hi')">🗑 Remove Red Servers</button>
-        </div>
-      </div>
-    </div>
-    <div class="ein-helper">
-      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.</p>
-      <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-hi" href="https://einthusan.tv/movie/results/?find=Popularity&lang=hindi&ptype=view&tp=alltime" target="_blank">🌐 Search on Einthusan</a>
-      </div>
-      <div class="ein-helper-row" style="margin-top:12px;">
-        <input type="text" id="ein-url-hi" placeholder="https://einthusan.tv/movie/watch/…" />
-        <button class="ein-dl-btn" onclick="openSaveTheVideo('hi')">⬇ Get MP4</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== MALAYALAM / TAMIL TAB ========== -->
-  <div class="tab-content" id="tab-ta">
-    <div class="sec-header">
-      <div class="sec-title">Recently Watched</div>
-      <button class="clear-btn" onclick="clearRecent('ta')">Clear</button>
-    </div>
-    <div id="recent-grid-ta"></div>
-    <div class="no-recent" id="no-recent-ta">Nothing watched yet.</div>
-    <div class="watchlist-sec">
-      <div class="sec-header">
-        <div class="sec-title">My Watchlist</div>
-        <button class="clear-btn" onclick="clearWatchlist('ta')">Clear</button>
-      </div>
-      <div class="watch-grid" id="watch-grid-ta"></div>
-    </div>
-    <div class="search-sec">
-      <div class="section-label">Search Malayalam / Hindi / Tamil Movie or Series</div>
-      <div class="search-row">
-        <div class="srch-wrap">
-          <input type="text" id="srch-ta" placeholder="Type title…" autocomplete="off" />
-          <div id="sug-ta"></div>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="ctrl-grp">
-          <div class="ctrl-lbl">Language</div>
-          <select id="lang-ta" onchange="updateEinthusan('ta', selMovie.ta?.title || document.getElementById('srch-ta').value || '')">
-            <option value="malayalam" selected>Malayalam</option>
-            <option value="hindi">Hindi</option>
-            <option value="tamil">Tamil</option>
-          </select>
-        </div>
-        <div class="series-ctrl" id="sc-ta">
-          <div class="ctrl-grp"><div class="ctrl-lbl">Season</div>
-            <input type="number" class="num-in" id="s-ta" value="1" min="1" /></div>
-          <div class="ctrl-grp"><div class="ctrl-lbl">Episode</div>
-            <input type="number" class="num-in" id="e-ta" value="1" min="1" /></div>
-        </div>
-        <button class="play-btn" onclick="playMovie('ta')">▶ Play</button>
-      </div>
-    </div>
-    <div class="now-bar" id="nb-ta">
-      <img class="np-img" id="npi-ta" src="" alt="" />
-      <div class="np-det"><div class="np-title" id="npt-ta"></div><div class="np-meta" id="npm-ta"></div></div>
-      <div class="np-star" id="nps-ta"></div>
-    </div>
-
-    <!-- Server button bar above player -->
-    <div class="srv-btn-bar" id="srv-btn-bar-ta">
-      <span class="srv-bar-label">Server:</span>
-      <div id="srv-pills-ta" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-      <div class="srv-bar-sep"></div>
-      <div class="srv-bar-actions">
-        <button class="srv-bar-test" onclick="testAllServers('ta')">⚡ Test</button>
-        <button class="srv-bar-manage" onclick="toggleSrvPanel('ta')">⚙ Manage</button>
-      </div>
-    </div>
-
-    <div class="player-outer" id="po-ta">
-      <div class="player-stage default" id="ps-ta">
-        <div class="iframe-wrap"><iframe class="vid-frame" id="vf-ta" allowfullscreen referrerpolicy="origin" allow="autoplay; fullscreen; encrypted-media"></iframe></div>
-      </div>
-      <div class="player-controls">
-        <div class="view-btns">
-          <button class="vbtn active" onclick="setView('ta','default',this)">Default</button>
-          <button class="vbtn" onclick="setView('ta','theatre',this)">Theatre</button>
-          <button class="vbtn" onclick="fsPlayer('ta')">⛶ Fullscreen</button>
-        </div>
-      </div>
-      <div class="srv-panel" id="srv-panel-ta">
-        <div class="srv-panel-title">Server Manager</div>
-        <div class="srv-list" id="srv-list-ta"></div>
-        <div class="add-srv-row">
-          <input class="add-srv-inp" id="add-srv-name-ta" placeholder="Server name" />
-          <input class="add-srv-inp" id="add-srv-movie-ta" placeholder="Movie URL (use {id})" />
-          <input class="add-srv-inp" id="add-srv-tv-ta" placeholder="TV URL (use {id},{s},{e})" />
-          <button class="add-srv-btn" onclick="addCustomServer('ta')">＋ Add</button>
-        </div>
-        <div class="srv-panel-actions" style="margin-top:12px;">
-          <button class="srv-act-btn" onclick="testAllServers('ta')">⚡ Test All Servers</button>
-          <button class="srv-act-btn secondary" onclick="resetServers('ta')">↺ Reset to Defaults</button>
-          <button class="srv-act-btn secondary" onclick="autoRemoveBroken('ta')">🗑 Remove Red Servers</button>
-        </div>
-      </div>
-    </div>
-    <div class="ein-helper">
-      <div class="section-label">🎬 Einthusan — Stream &amp; Download</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Click below to search your selected movie on Einthusan, or paste a URL to download via SaveTheVideo.</p>
-      <div class="ein-links-row">
-        <a class="ein-browse-btn" id="ein-browse-ta" href="https://einthusan.tv/movie/results/?find=Popularity&lang=tamil&ptype=view&tp=alltime" target="_blank">🌐 Search selected language on Einthusan</a>
-      </div>
-      <div class="ein-helper-row" style="margin-top:12px;">
-        <input type="text" id="ein-url-ta" placeholder="https://einthusan.tv/movie/watch/…" />
-        <button class="ein-dl-btn" onclick="openSaveTheVideo('ta')">⬇ Get MP4</button>
       </div>
     </div>
   </div>
@@ -1085,16 +931,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
     </div>
   </div>
 
-  <!-- ========== SETTINGS TAB ========== -->
-  <div class="tab-content" id="tab-settings">
-    <div class="settings-grid">
-      <div class="settings-card">
-        <h3>Server Tools</h3>
-        <p>Add back any missing built-in servers and refresh the server buttons.</p>
-        <div class="settings-actions"><button id="find-servers-btn" onclick="findNewServers()">Find new servers</button></div>
-      </div>
-    </div>
-  </div>
 
 </div><!-- end .main -->
 
@@ -1378,38 +1214,52 @@ function onSeasonChange() {
    INIT
    ================================================ */
 function migrateMalayalamIntoTamil() {
-  // One-time merge so old Malayalam local data becomes the main data after removing the duplicate Tamil tab.
-  const flagsKey = 'sv_migrated_ml_into_ta_v1';
+  // One-time merge from older language-specific tabs into the single Movies tab.
+  const flagsKey = 'sv_migrated_all_movies_into_en_v1';
   if (localStorage.getItem(flagsKey)) return;
   const users = getUsers();
   users.forEach(user => {
     ['r','w'].forEach(kind => {
-      const mlKey = `sv_${kind}_${user}_ml`;
-      const taKey = `sv_${kind}_${user}_ta`;
+      const targetKey = `sv_${kind}_${user}_en`;
       try {
-        const ml = JSON.parse(localStorage.getItem(mlKey) || '[]');
-        const ta = JSON.parse(localStorage.getItem(taKey) || '[]');
+        const merged = [];
         const seen = new Set();
-        const merged = [...ta, ...ml].filter(item => {
-          const key = `${item.tmdbId}_${item.type}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        ['en','ta','hi','ml'].forEach(lang => {
+          const key = `sv_${kind}_${user}_${lang}`;
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.forEach(item => {
+            const uniqueKey = `${item.tmdbId || item.imdbId || item.title}_${item.type || ''}`;
+            if (seen.has(uniqueKey)) return;
+            seen.add(uniqueKey);
+            merged.push(item);
+          });
         });
-        if (merged.length) localStorage.setItem(taKey, JSON.stringify(merged));
+        if (merged.length) localStorage.setItem(targetKey, JSON.stringify(merged.slice(0, kind === 'w' ? 30 : 20)));
       } catch(e) {}
     });
+
+    // Move saved stop-times for old language tabs into the English key when English does not already have one.
+    try {
+      Object.keys(localStorage).forEach(key => {
+        const prefixRe = new RegExp(`^sv_ts_${user}_(ta|hi|ml)_(.+)$`);
+        const match = key.match(prefixRe);
+        if (!match) return;
+        const target = `sv_ts_${user}_en_${match[2]}`;
+        if (!localStorage.getItem(target)) localStorage.setItem(target, localStorage.getItem(key));
+      });
+    } catch(e) {}
   });
   localStorage.setItem(flagsKey, '1');
 }
+
 document.getElementById('api-banner').classList.add('hidden');
 migrateMalayalamIntoTamil();
 initUsers();
 renderAllRecents();
-initSearch('en'); initSearch('hi'); initSearch('ta');
+initSearch('en');
 initYTSearch();
 
-['en','hi','ta'].forEach(lang => {
+['en'].forEach(lang => {
   const raw = localStorage.getItem(`sv_srvs_${lang}`);
   if (raw) {
     try {
@@ -1869,6 +1719,96 @@ async function syncNow(e){
     updateHeaderSyncStatus('synced');
   } catch(err) { updateHeaderSyncStatus('error'); }
 }
+
+function setForceSaveNote(msg, cls=''){
+  const note = document.getElementById('force-save-note');
+  const btn = document.getElementById('force-firebase-save-btn');
+  if(note){
+    note.textContent = msg || '';
+    note.className = 'force-save-note' + (cls ? ' ' + cls : '');
+  }
+  if(btn) btn.disabled = cls === 'work';
+}
+function collectLocalProgressSnapshot(){
+  const out = {};
+  const prefix = `sv_ts_${currentUser}_`;
+  try{
+    Object.keys(localStorage).forEach(key => {
+      if(!key.startsWith(prefix)) return;
+      const rest = key.slice(prefix.length);
+      const firstUnderscore = rest.indexOf('_');
+      if(firstUnderscore < 1) return;
+      const lang = rest.slice(0, firstUnderscore);
+      const tmdbId = rest.slice(firstUnderscore + 1);
+      if(!lang || !tmdbId) return;
+      try{
+        const val = JSON.parse(localStorage.getItem(key) || 'null');
+        if(val){
+          if(!out[lang]) out[lang] = {};
+          out[lang][tmdbId] = val;
+        }
+      }catch(e){}
+    });
+  }catch(e){}
+  return out;
+}
+async function captureVisibleManualProgressBeforeForceSave(){
+  try{
+    const lang = 'en';
+    const m = selMovie?.[lang] || activeWatchSession?.movie;
+    if(!m || !m.tmdbId) return;
+    const input = document.getElementById('manual-time-' + lang);
+    const typed = input ? input.value.trim() : '';
+    const current = (typeof calculateCurrentWatchPosition === 'function') ? calculateCurrentWatchPosition() : null;
+    if(!typed && !current) return;
+    if(typed && !/^\d+(?::[0-5]?\d){0,2}$/.test(typed)) return;
+    const isTV = m.type === 'tv';
+    const season = isTV ? parseInt(document.getElementById('s-' + lang)?.value || current?.season || 1) : null;
+    const ep = isTV ? parseInt(document.getElementById('e-' + lang)?.value || current?.ep || 1) : null;
+    const seconds = typed ? parseTsToSeconds(typed) : (current?.seconds || 0);
+    const data = {
+      tmdbId: m.tmdbId || '', title: m.title || '', type: m.type || '', poster: m.poster || '', year: m.year || '', lang,
+      season: season || null, episode: ep || null, ep: ep || null,
+      seconds: Math.max(0, Math.floor(seconds || 0)), ts: formatWatchTime(seconds || 0), stoppedAt: formatWatchTime(seconds || 0),
+      updatedAt: Date.now(), saved: Date.now()
+    };
+    localStorage.setItem(getTsKey(m.tmdbId, lang), JSON.stringify(data));
+  }catch(e){ console.warn('[Force Save] visible progress capture skipped', e); }
+}
+async function forceSaveToFirebase(e){
+  e?.stopPropagation?.();
+  if(!cloudReady()){
+    updateHeaderSyncStatus('error');
+    setForceSaveNote('Firebase URL missing.', 'bad');
+    alert('Firebase URL is missing in the code.');
+    return;
+  }
+  updateHeaderSyncStatus('syncing');
+  setForceSaveNote('Saving local data to Firebase…', 'work');
+  try{
+    await captureVisibleManualProgressBeforeForceSave();
+    const savedAt = Date.now();
+    const langs = ['en','yt'];
+    for(const lang of langs){
+      await cloudSet(syncKey(lang), getR(lang));
+      if(lang !== 'yt') await cloudSet(watchSyncKey(lang), getW(lang));
+    }
+    const progress = collectLocalProgressSnapshot();
+    await cloudSet('progress', progress);
+    await cloudSet('manualSaveMeta', { savedAt, source: 'Force Save to Firebase', user: currentUser || 'Joel' });
+    try{ renderRecent('en'); renderContinueWatching('en'); renderWatchlist('en'); renderRecent('yt'); renderPremiumHome?.(); }catch(refreshErr){}
+    updateHeaderSyncStatus('synced');
+    setForceSaveNote('Saved to Firebase just now.', 'ok');
+    setTimeout(() => setForceSaveNote('', ''), 4000);
+  }catch(err){
+    console.warn('[Force Save] failed', err);
+    updateHeaderSyncStatus('error');
+    setForceSaveNote('Force save failed. Check Firebase rules/connection.', 'bad');
+  }
+}
+window.forceSaveToFirebase = forceSaveToFirebase;
+window.setForceSaveNote = setForceSaveNote;
+
 window.toggleCloudSyncBox=toggleCloudSyncBox;
 window.saveCloudSyncSettings=saveCloudSyncSettings;
 window.clearCloudSyncSettings=clearCloudSyncSettings;
@@ -2301,7 +2241,7 @@ function cwResume(lang) {
    RECENTLY WATCHED RENDER
    ================================================ */
 function renderAllRecents() {
-  ['en','hi','ta','yt'].forEach(lang => {
+  ['en','yt'].forEach(lang => {
     renderRecent(lang);
     renderContinueWatching(lang);
     renderWatchlist(lang);
@@ -2521,9 +2461,9 @@ if ('caches' in window) {
 <script>
 /* ========== APP SHELL CONTROLLER ========== */
 (function(){
-  const MOVIE_LANGS = ['ta','hi','en'];
-  let premiumMovieLang = localStorage.getItem('premium_movie_lang') || 'ta';
-  if (!MOVIE_LANGS.includes(premiumMovieLang)) premiumMovieLang='ta';
+  const MOVIE_LANGS = ['en'];
+  let premiumMovieLang = 'en';
+  localStorage.setItem('premium_movie_lang','en');
   const oldSwitchTab = window.switchTab;
   const oldRenderAllRecents = window.renderAllRecents;
   const oldAddRecent = window.addRecent;
@@ -2558,7 +2498,8 @@ if ('caches' in window) {
   }
 
   window.selectPremiumMovieLang=function(lang, silent){
-    premiumMovieLang=lang; localStorage.setItem('premium_movie_lang',lang);
+    lang='en';
+    premiumMovieLang='en'; localStorage.setItem('premium_movie_lang','en');
     document.querySelectorAll('#premium-lang-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
     MOVIE_LANGS.forEach(l=>{
       const sec=document.getElementById('tab-'+l);
@@ -2568,7 +2509,7 @@ if ('caches' in window) {
   }
 
   window.switchTab=function(t){
-    if(['en','ta','hi'].includes(t)){ premiumMovieLang = t; t='movies'; }
+    if(['en','ta','hi'].includes(t)){ premiumMovieLang = 'en'; t='movies'; }
     document.querySelectorAll('.tabs .tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
     document.querySelectorAll('.main > .tab-content').forEach(el=>el.classList.toggle('active',el.id==='tab-'+t));
     if(t==='movies') selectPremiumMovieLang(premiumMovieLang, true);
@@ -2603,9 +2544,9 @@ if ('caches' in window) {
 
   function renderPremiumHome(){
     const cont=document.getElementById('premium-continue');
-    const watch=document.getElementById('premium-watch-ta');
+    const watch=document.getElementById('premium-watch-en');
     const recent=document.getElementById('premium-recent-all');
-    const langs=['ta','hi','en'];
+    const langs=['en'];
     const combinedRecent=langs
       .flatMap(lang => (getR?.(lang)||[]).map((m,i)=>({m,i,lang})))
       .sort((a,b)=>(b.m.ts||0)-(a.m.ts||0));
@@ -2897,7 +2838,7 @@ if ('caches' in window) {
 (function(){
   'use strict';
 
-  const AUTO_SYNC_LANGS = ['en','hi','ta','yt'];
+  const AUTO_SYNC_LANGS = ['en','yt'];
   let autoSyncBusy = false;
   let lastAutoSync = 0;
 
@@ -2960,5 +2901,127 @@ if ('caches' in window) {
 })();
 </script>
   
+
+<script>
+/* ========== ROBUST YOUTUBE INLINE SUGGESTIONS PATCH ========== */
+(function(){
+  'use strict';
+
+  const YT_INSTANCES = [
+    'https://inv.nadeko.net',
+    'https://invidious.privacydev.net',
+    'https://iv.melmac.space',
+    'https://yewtu.be',
+    'https://vid.puffyan.us'
+  ];
+
+  function ytBox(){ return document.getElementById('sug-yt'); }
+  function ytInput(){ return document.getElementById('yt-url'); }
+  function isUrlish(q){ return /^https?:\/\//i.test(q) || q.includes('youtu'); }
+  function html(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function dur(sec){ sec=Number(sec||0); if(!sec) return ''; const m=Math.floor(sec/60), s=sec%60; return `${m}:${s<10?'0':''}${s}`; }
+
+  function renderTextSuggestions(q, suggestions){
+    const box=ytBox(); if(!box) return;
+    const rows=(suggestions||[]).slice(0,8).map(text=>`<div class="sug-item yt-text-suggestion" data-q="${html(text)}">
+      <div class="sug-yt-no-img">🔎</div>
+      <div class="sug-info"><div class="sug-title">${html(text)}</div><div class="sug-meta">Search YouTube</div></div>
+      <span class="sug-badge badge-yt">Search</span>
+    </div>`).join('');
+    box.innerHTML = rows || `<div class="sug-item" style="font-size:12px;color:var(--muted);">Press Enter or Load to search “${html(q)}”.</div>`;
+    box.querySelectorAll('.yt-text-suggestion').forEach(row=>{
+      row.addEventListener('click',()=>{
+        const val=row.getAttribute('data-q') || '';
+        const input=ytInput(); if(input) input.value=val;
+        robustYtSearch(val);
+      });
+    });
+  }
+
+  function fetchYoutubeAutocomplete(q){
+    return new Promise(resolve=>{
+      const cb='ytSuggestCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+      const script=document.createElement('script');
+      const cleanup=()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } script.remove(); };
+      const timer=setTimeout(()=>{ cleanup(); resolve([]); },2500);
+      window[cb]=data=>{
+        clearTimeout(timer);
+        const list=(data && data[1] ? data[1] : []).map(x=>Array.isArray(x)?x[0]:x).filter(Boolean);
+        cleanup(); resolve(list);
+      };
+      script.src=`https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(q)}&callback=${cb}`;
+      script.onerror=()=>{ clearTimeout(timer); cleanup(); resolve([]); };
+      document.head.appendChild(script);
+    });
+  }
+
+  async function robustYtSearch(q){
+    const box=ytBox(); if(!box) return;
+    q=String(q||'').trim();
+    if(!q || isUrlish(q)){ box.innerHTML=''; return; }
+    box.innerHTML='<div class="sug-item"><span class="spinner"></span><span style="font-size:12px;color:var(--muted);">Searching YouTube…</span></div>';
+
+    for(const inst of YT_INSTANCES){
+      try{
+        const url=`${inst}/api/v1/search?q=${encodeURIComponent(q)}&type=video&fields=videoId,title,author,publishedText,viewCount,lengthSeconds,videoThumbnails`;
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),3500);
+        const data=await fetch(url,{signal:controller.signal}).then(r=>r.json());
+        clearTimeout(timer);
+        if(Array.isArray(data) && data.length){
+          box.innerHTML='';
+          data.slice(0,8).forEach(v=>{
+            const thumb=(v.videoThumbnails||[]).find(t=>t.quality==='medium')?.url || (v.videoThumbnails||[])[0]?.url || `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`;
+            const row=document.createElement('div');
+            row.className='sug-item';
+            row.innerHTML=`<img class="sug-thumb" src="${html(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'" />
+              <div class="sug-info"><div class="sug-title">${html(v.title)}</div>
+              <div class="sug-meta">${html(v.author||'')}${v.lengthSeconds?' · '+dur(v.lengthSeconds):''}</div></div>
+              <span class="sug-badge badge-yt">YT</span>`;
+            row.addEventListener('click',()=>{
+              if(typeof playYtVideo==='function') playYtVideo(v.videoId,v.title,v.author,thumb);
+            });
+            box.appendChild(row);
+          });
+          return;
+        }
+      }catch(e){}
+    }
+
+    const suggestions=await fetchYoutubeAutocomplete(q);
+    renderTextSuggestions(q, suggestions.length ? suggestions : [q]);
+  }
+
+  function bindRobustYt(){
+    const input=ytInput(); const box=ytBox();
+    if(!input || !box || input.dataset.robustYtBound==='1') return;
+    input.dataset.robustYtBound='1';
+    let timer=null;
+    input.addEventListener('input',()=>{
+      clearTimeout(timer);
+      const q=input.value.trim();
+      if(!q || isUrlish(q)){ box.innerHTML=''; return; }
+      box.innerHTML='<div class="sug-item"><span class="spinner"></span><span style="font-size:12px;color:var(--muted);">Searching…</span></div>';
+      timer=setTimeout(()=>robustYtSearch(q),250);
+    });
+    input.addEventListener('focus',()=>{
+      const q=input.value.trim();
+      if(q && !isUrlish(q) && !box.innerHTML.trim()) robustYtSearch(q);
+    });
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const q=input.value.trim();
+        if(q && !isUrlish(q)){ e.preventDefault(); robustYtSearch(q); }
+      }
+    });
+  }
+
+  window.ytSearch = robustYtSearch;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindRobustYt, {once:true});
+  else bindRobustYt();
+  window.addEventListener('load', bindRobustYt);
+})();
+</script>
+
 </body>
 </html>
