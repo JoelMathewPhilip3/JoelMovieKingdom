@@ -709,27 +709,21 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 
   <!-- ========== ENGLISH TAB ========== -->
   <div class="tab-content premium-lang-section" id="tab-en">
-    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:0;">
-      <div style="flex:2;min-width:260px;">
-        <div class="sec-header">
-          <div class="sec-title">Recently Watched <span class="sync-dot" id="sync-dot-en"><span class="sync-pulse" id="sync-pulse-en"></span><span id="sync-label-en">…</span></span></div>
-          <button class="clear-btn" onclick="clearRecent('en')">Clear</button>
+    <!-- Movies tab recently watched and continue watching sections removed by request.
+         Hidden placeholders are kept so existing sync/progress JavaScript does not break. -->
+    <div style="display:none!important;">
+      <span class="sync-dot" id="sync-dot-en"><span class="sync-pulse" id="sync-pulse-en"></span><span id="sync-label-en">…</span></span>
+      <div id="recent-grid-en"></div>
+      <div class="no-recent" id="no-recent-en">Nothing watched yet.</div>
+      <div class="cw-card empty" id="cw-card-en" onclick="cwResume('en')">
+        <img class="cw-poster" id="cw-poster-en" src="" alt="" style="display:none"/>
+        <div class="cw-det">
+          <div class="cw-label">▶ Resume</div>
+          <div class="cw-title" id="cw-title-en">Nothing yet</div>
+          <div class="cw-meta" id="cw-meta-en">Watch something to continue here</div>
+          <div class="cw-ts" id="cw-ts-en"></div>
         </div>
-        <div id="recent-grid-en"></div>
-        <div class="no-recent" id="no-recent-en">Nothing watched yet.</div>
-      </div>
-      <div style="flex:1;min-width:220px;max-width:340px;">
-        <div class="sec-header"><div class="sec-title">Continue Watching</div></div>
-        <div class="cw-card empty" id="cw-card-en" onclick="cwResume('en')">
-          <img class="cw-poster" id="cw-poster-en" src="" alt="" style="display:none"/>
-          <div class="cw-det">
-            <div class="cw-label">▶ Resume</div>
-            <div class="cw-title" id="cw-title-en">Nothing yet</div>
-            <div class="cw-meta" id="cw-meta-en">Watch something to continue here</div>
-            <div class="cw-ts" id="cw-ts-en"></div>
-          </div>
-          <button class="cw-play" id="cw-play-en" style="display:none">▶ Play</button>
-        </div>
+        <button class="cw-play" id="cw-play-en" style="display:none">▶ Play</button>
       </div>
     </div>
 
@@ -821,7 +815,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
 
     <div class="server-tools-inline">
       <button class="server-find-btn" id="find-servers-btn" onclick="findNewServers()">🔎 Find new servers</button>
-      <button class="server-find-btn secondary" onclick="testAllServers('en')">⚡ Test servers</button>
       <button class="server-find-btn secondary" onclick="toggleSrvPanel('en')">⚙ Manage servers</button>
     </div>
 
@@ -831,7 +824,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
       <div id="srv-pills-en" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       <div class="srv-bar-sep"></div>
       <div class="srv-bar-actions">
-        <button class="srv-bar-test" onclick="testAllServers('en')">⚡ Test</button>
         <button class="srv-bar-manage" onclick="toggleSrvPanel('en')">⚙ Manage</button>
       </div>
     </div>
@@ -864,7 +856,6 @@ select:focus,.num-in:focus{outline:none;border-color:var(--gold);}
           <button class="add-srv-btn" onclick="addCustomServer('en')">＋ Add</button>
         </div>
         <div class="srv-panel-actions" style="margin-top:12px;">
-          <button class="srv-act-btn" onclick="testAllServers('en')">⚡ Test All Servers</button>
           <button class="srv-act-btn secondary" onclick="resetServers('en')">↺ Reset to Defaults</button>
           <button class="srv-act-btn secondary" onclick="autoRemoveBroken('en')">🗑 Remove Red Servers</button>
         </div>
